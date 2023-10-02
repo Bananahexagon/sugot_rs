@@ -18,7 +18,10 @@ pub fn main(code: String) -> Vec<Token> {
                     end_column: end_location.1,
                 },
             });
-            current_token = String::new();
+            #[allow(unused_assignments)]
+            {
+                current_token = String::new();
+            }
             start_location = end_location;
         };
     }
@@ -36,7 +39,7 @@ pub fn main(code: String) -> Vec<Token> {
             }
             current_token = "\"".to_string();
             current_ptr += (lv + 1) as usize;
-            end_location.1 +=(lv + 1) as usize;
+            end_location.1 += (lv + 1) as usize;
             let mut q_count = 0;
             for c in (code[current_ptr..]).chars() {
                 if c == '\n' {
@@ -73,7 +76,8 @@ pub fn main(code: String) -> Vec<Token> {
             current_token += "\"";
             push!();
             current_ptr -= 1;
-        }if !matches!(c, ' ' | '\n' | '\t' | '\r') {
+        }
+        if !matches!(c, ' ' | '\n' | '\t' | '\r') {
             current_token.push(c);
         } else if c == '/' && code.chars().nth(current_ptr + 1).unwrap_or('_') == '/' {
             while current_ptr < code_len && code.chars().nth(current_ptr).unwrap() != '\n' {

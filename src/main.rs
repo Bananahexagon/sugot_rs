@@ -15,5 +15,6 @@ fn main() -> void {
 fn compile(code: String) -> String {
     let tokens = lexer::main(code);
     println!("{:?}", tokens);
+    let _ast = parser::main::main(tokens);
     unimplemented!()
 }
