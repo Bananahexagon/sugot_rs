@@ -2,10 +2,10 @@ use super::general::Location;
 
 pub struct Program {
     pub location: Location,
-    pub body: FnDeclar,
+    pub body: FuncDeclar,
 }
 
-pub struct FnDeclar {
+pub struct FuncDeclar {
     pub location: Location,
     pub name: String,
     pub input_types: Vec<VarDeclar>,
@@ -17,17 +17,30 @@ pub struct VarDeclar {
     pub location: Location,
     pub name: String,
     pub data_type: DataType,
-    pub define: Option<Expression>,
+    pub init: Option<Expression>,
 }
 
 pub struct DataType {
     pub location: Location,
     pub value: String,
 }
-
-pub struct Statement {
-    pub location: Location,
-    pub exp: Expression,
+pub enum Statement {
+    Block(Block),
+    VarDeclar(VarDeclar),
+    Call(CallFunc),
 }
 
-pub struct Expression {}
+pub struct Block {
+    pub location: Location,
+    pub contents: Vec<Statement>,
+}
+
+pub enum Expression {
+    Call(CallFunc),
+}
+
+pub struct CallFunc {
+    pub location: Location,
+    pub func: String,
+    pub args: Vec<Expression>,
+}
