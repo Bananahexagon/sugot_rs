@@ -1,6 +1,18 @@
 mod types;
 mod lexer;
+mod tests;
 
 fn main() {
-    println!("Hello, world!");
+    compile(r#"
+fn main () -> void {
+    println ( "Hello, world!" ) ;
+}
+
+"#.to_string());
+}
+
+fn compile(code: String) -> String {
+    let tokens = lexer::main(code);
+    println!("{:?}", tokens);
+    unimplemented!()
 }
