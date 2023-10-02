@@ -1,4 +1,4 @@
-use crate::types::general::Location;
+use crate::types::general::{Location, Token};
 
 pub fn main(code: String) -> Vec<Token> {
     let mut result: Vec<Token> = Vec::new();
@@ -7,17 +7,8 @@ pub fn main(code: String) -> Vec<Token> {
     let mut current_ptr = 0;
     let mut current_token = String::new();
     let code_len = code.chars().count();
-    while current_ptr < code_len {
-        let c = code.chars().nth(current_ptr).unwrap();
-        if c == '\n' {
-            end_location.0 += 1;
-            end_location.1 = 0;
-        } else {
-            end_location.1 += 1;
-        }
-        if c != '\n' && c != ' ' {
-            current_token.push(c);
-        } else if !current_token.is_empty() {
+    macro_rules! push {
+        () => {
             result.push(Token {
                 val: current_token,
                 location: Location {
@@ -29,13 +20,101 @@ pub fn main(code: String) -> Vec<Token> {
             });
             current_token = String::new();
             start_location = end_location;
+        };
+    }
+    while current_ptr < code_len {
+        let c = code.chars().nth(current_ptr).unwrap();
+        if c == '\n' {
+            end_location.0 += 1;
+            end_location.1 = 0;
+        } else {
+            end_location.1 += 1;
+        }
+        if let Some(lv) = match_string_open(&code[current_ptr..]) {
+            if !current_token.is_empty() {
+                push!();
+            }
+            current_token = "\"".to_string();
+            current_ptr += (lv + 1) as usize;
+            end_location.1 +=(lv + 1) as usize;
+            let mut q_count = 0;
+            for c in (code[current_ptr..]).chars() {
+                if c == '\n' {
+                    end_location.0 += 1;
+                    end_location.1 = 0;
+                } else {
+                    end_location.1 += 1;
+                }
+                if q_count == 0 && c == '"' {
+                    q_count = 1;
+                } else if 0 < q_count && c == '#' {
+                    q_count += 1;
+                } else {
+                    if 0 < q_count {
+                        current_token.push('"')
+                    };
+                    let mut tmp = 0;
+                    while tmp + 1 < q_count {
+                        current_token.push('#');
+                        tmp += 1;
+                    }
+                    if c == '"' {
+                        q_count = 1;
+                    } else {
+                        current_token.push(c);
+                        q_count = 0;
+                    }
+                }
+                current_ptr += 1;
+                if lv < q_count {
+                    break;
+                }
+            }
+            current_token += "\"";
+            push!();
+            current_ptr -= 1;
+        }if !matches!(c, ' ' | '\n' | '\t' | '\r') {
+            current_token.push(c);
+        } else if c == '/' && code.chars().nth(current_ptr + 1).unwrap_or('_') == '/' {
+            while current_ptr < code_len && code.chars().nth(current_ptr).unwrap() != '\n' {
+                current_ptr += 1;
+            }
+        } else if match_long(&current_token, &["(", ")", "{", "}"]).0 {
+            current_ptr += match_long(&current_token, &["(", ")", "{", "}"]).1.unwrap() - 1;
+            push!();
+        } else if !current_token.is_empty() {
+            push!();
         }
         current_ptr += 1;
     }
     return result;
 }
-#[derive(Debug, Clone)]
-pub struct Token {
-    val: String,
-    location: Location,
+
+fn match_long(left: &str, rights: &[&str]) -> (bool, Option<usize>) {
+    for right in rights {
+        let len = right.len();
+        if left.len() < len {
+            continue;
+        }
+        let r = &right[0..len];
+        let l = &left[0..len];
+        if r == l {
+            return (true, Some(right.len()));
+        }
+    }
+    (false, None)
+}
+
+fn match_string_open(left: &str) -> Option<u32> {
+    let mut result = 0;
+    for c in left.chars() {
+        if c == '#' {
+            result += 1;
+        } else if c == '"' {
+            return Some(result);
+        } else {
+            return None;
+        }
+    }
+    return None;
 }

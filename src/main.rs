@@ -1,11 +1,12 @@
 mod types;
 mod lexer;
 mod tests;
+mod parser;
 
 fn main() {
     compile(r#"
-fn main () -> void {
-    println ( "Hello, world!" ) ;
+fn main() -> void {
+    println("Hello, world!");
 }
 
 "#.to_string());
