@@ -5,7 +5,7 @@ mod parser;
 
 fn main() {
     compile(r#"
-fn main() -> void {
+fun main() -> void {
     println("Hello, world!");
 }
 

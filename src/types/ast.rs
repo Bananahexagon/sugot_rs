@@ -1,10 +1,5 @@
 use super::general::Location;
 
-pub struct Program {
-    pub location: Location,
-    pub body: FuncDeclar,
-}
-
 pub struct FuncDeclar {
     pub location: Location,
     pub name: String,
