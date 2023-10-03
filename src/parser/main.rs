@@ -30,8 +30,8 @@ fn func_decl_parse(tokens: Vec<Token>) -> FuncDeclar {
     return FuncDeclar {
         location: location,
         name: tokens[1].val.clone(),
-        input_types: unimplemented!(),
-        return_type: unimplemented!(),
+        input_types: vec![] , //TODO 今は入力を取らない関数だけ
+        return_type: unimplemented!(), 
         define: unimplemented!(),
     }
 }
