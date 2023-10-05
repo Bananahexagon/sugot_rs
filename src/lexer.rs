@@ -77,8 +77,10 @@ pub fn main(code: String) -> Vec<Token> {
             push!();
             current_ptr -= 1;
         }
-        if !matches!(c, ' ' | '\n' | '\t' | '\r') {
-            current_token.push(c);
+        if matches!(c, ' ' | '\n' | '\t' | '\r') {
+            if !current_token.is_empty() {
+                push!();
+            }
         } else if c == '/' && code.chars().nth(current_ptr + 1).unwrap_or('_') == '/' {
             while current_ptr < code_len && code.chars().nth(current_ptr).unwrap() != '\n' {
                 current_ptr += 1;
@@ -91,9 +93,10 @@ pub fn main(code: String) -> Vec<Token> {
             current_ptr += matched.1.as_ref().unwrap().len() - 1;
             current_token = matched.1.unwrap();
             push!();
-        } else if !current_token.is_empty() {
-            push!();
+        } else {
+            current_token.push(c);
         }
+
         current_ptr += 1;
     }
     return result;

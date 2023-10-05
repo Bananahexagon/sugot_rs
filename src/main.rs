@@ -5,9 +5,9 @@ mod parser;
 
 fn main() {
     compile(r#"
-fun main() -> void {
+fun main() -> void 
     println ();
-}
+
 
 "#.to_string());
 }

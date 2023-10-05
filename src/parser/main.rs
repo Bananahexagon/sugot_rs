@@ -10,17 +10,23 @@ pub fn main(tokens: Vec<Token>) -> Vec<FuncDeclar> {
             stage += 1;
         } else if matches!(&token.val[..], ")" | "}") {
             stage -= 1;
-        } else if &token.val == "fun" && stage == 0 {
+        } else if &token.val == "fun" && stage == 0 && !decl.is_empty() {
             result.push(func_decl(decl));
             decl = Vec::new();
         };
         decl.push(token);
     }
-    unimplemented!()
+    if stage == 0 {
+        if !decl.is_empty() {
+            result.push(func_decl(decl));
+        }
+    } else {
+        panic!();
+    }
+    return result;
 }
 
 fn func_decl(tokens: Vec<Token>) -> FuncDeclar {
-    println!("{:?}", tokens);
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -87,7 +93,7 @@ fn call(tokens: Vec<Token>) -> CallFunc {
     }
     assert_eq!(tokens[ptr].val, ")");
     CallFunc {
-        location:location,
+        location: location,
         func: func_name,
         args: args,
     } //TODO: 引数をちゃんとする 2023-10-05
@@ -109,5 +115,8 @@ fn literal(token: Token) -> Literal {
 }
 
 fn data_type(token: Token) -> DataType {
-    DataType { location: token.location, val: token.val } // TODO: ちゃんとやる 2023-10-05
+    DataType {
+        location: token.location,
+        val: token.val,
+    } // TODO: ちゃんとやる 2023-10-05
 }
