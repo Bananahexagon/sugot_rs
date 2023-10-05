@@ -83,8 +83,13 @@ pub fn main(code: String) -> Vec<Token> {
             while current_ptr < code_len && code.chars().nth(current_ptr).unwrap() != '\n' {
                 current_ptr += 1;
             }
-        } else if match_long(&current_token, &["(", ")", "{", "}"]).0 {
-            current_ptr += match_long(&current_token, &["(", ")", "{", "}"]).1.unwrap() - 1;
+        } else if match_long(&code[current_ptr..], &["(", ")", "{", "}"]).0 {
+            if !current_token.is_empty() {
+                push!();
+            }
+            let matched = match_long(&code[current_ptr..], &["(", ")", "{", "}"]);
+            current_ptr += matched.1.as_ref().unwrap().len() - 1;
+            current_token = matched.1.unwrap();
             push!();
         } else if !current_token.is_empty() {
             push!();
@@ -94,7 +99,7 @@ pub fn main(code: String) -> Vec<Token> {
     return result;
 }
 
-fn match_long(left: &str, rights: &[&str]) -> (bool, Option<usize>) {
+fn match_long(left: &str, rights: &[&str]) -> (bool, Option<String>) {
     for right in rights {
         let len = right.len();
         if left.len() < len {
@@ -103,7 +108,7 @@ fn match_long(left: &str, rights: &[&str]) -> (bool, Option<usize>) {
         let r = &right[0..len];
         let l = &left[0..len];
         if r == l {
-            return (true, Some(right.len()));
+            return (true, Some(right.to_string()));
         }
     }
     (false, None)

@@ -17,7 +17,7 @@ pub struct VarDeclar {
 
 pub struct DataType {
     pub location: Location,
-    pub value: String,
+    pub val: String,
 }
 pub enum Statement {
     Block(Block),
@@ -32,10 +32,20 @@ pub struct Block {
 
 pub enum Expression {
     Call(CallFunc),
+    Value(Value)
 }
 
 pub struct CallFunc {
     pub location: Location,
     pub func: String,
     pub args: Vec<Expression>,
+}
+
+pub enum Value {
+    Literal(Literal),
+}
+
+pub struct Literal {
+    pub location: Location,
+    pub val: String,
 }

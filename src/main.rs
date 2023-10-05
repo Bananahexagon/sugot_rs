@@ -6,7 +6,7 @@ mod parser;
 fn main() {
     compile(r#"
 fun main() -> void {
-    println("Hello, world!");
+    println ();
 }
 
 "#.to_string());
