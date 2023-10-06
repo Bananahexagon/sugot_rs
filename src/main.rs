@@ -2,6 +2,7 @@ mod types;
 mod lexer;
 mod tests;
 mod parser;
+mod generator;
 
 fn main() {
     compile(r#"
@@ -14,8 +15,10 @@ fun main() -> void {
 
 fn compile(code: String) -> String {
     let tokens = lexer::main(code);
-    println!("{:?}", tokens);
+    println!("{:#?}", tokens);
     let ast = parser::main::main(tokens);
-    println!("{:?}", ast);
-    unimplemented!()
+    println!("{:#?}", ast);
+    let code = generator::javascript::main::generate(ast);
+    println!("{}", code);
+    code
 }

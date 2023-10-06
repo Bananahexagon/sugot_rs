@@ -75,7 +75,6 @@ pub fn main(code: String) -> Vec<Token> {
             }
             current_token += "\"";
             push!();
-            current_ptr -= 1;
         }
         if matches!(c, ' ' | '\n' | '\t' | '\r') {
             if !current_token.is_empty() {
