@@ -5,9 +5,9 @@ mod parser;
 
 fn main() {
     compile(r#"
-fun main() -> void 
-    println ();
-
+fun main() -> void {
+    println("Hello, world!");
+}
 
 "#.to_string());
 }
@@ -15,6 +15,7 @@ fun main() -> void
 fn compile(code: String) -> String {
     let tokens = lexer::main(code);
     println!("{:?}", tokens);
-    let _ast = parser::main::main(tokens);
+    let ast = parser::main::main(tokens);
+    println!("{:?}", ast);
     unimplemented!()
 }

@@ -68,7 +68,7 @@ fn statement(tokens: Vec<Token>) -> Statement {
     }
 }
 
-fn var_declar(tokens: Vec<Token>) -> VarDeclar {
+fn var_declar(_tokens: Vec<Token>) -> VarDeclar {
     unimplemented!() //TODO: 変数宣言をパースできるようにする 2023-10-05
 }
 
@@ -100,7 +100,43 @@ fn call(tokens: Vec<Token>) -> CallFunc {
 }
 
 fn block(tokens: Vec<Token>) -> Block {
-    unimplemented!() //TODO: ブロックをパースできるようにする 2023-10-05
+    let location = Location {
+        start_line: tokens[0].location.start_line,
+        start_column: tokens[0].location.start_column,
+        end_line: tokens[tokens.len() - 1].location.end_line,
+        end_column: tokens[tokens.len() - 1].location.end_column,
+    };
+    let mut result = Vec::new();
+    let mut current_statement = Vec::new();
+    let mut stage = 0;
+    let mut  i = 0;
+    let len = tokens.len();
+    for token in tokens {
+        if i == 0 || i == len - 1 {
+            i += 1;
+            continue;
+        }
+        match &token.val[..] {
+            "(" | "{" => {
+                stage += 1;
+                current_statement.push(token);
+            },
+            ")" | "}" => {
+                stage -= 1;
+                current_statement.push(token);
+            },
+            ";" if stage == 0 => {
+                result.push(statement(current_statement));
+                current_statement = Vec::new();
+            },
+            _ => current_statement.push(token),
+        }
+        i += 1;
+    }
+    return Block {
+        location: location,
+        contents: result,
+    };
 }
 
 fn value(token: Token) -> Value {
