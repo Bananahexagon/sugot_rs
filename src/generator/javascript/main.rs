@@ -1,4 +1,5 @@
 use crate::types::ast::*;
+
 pub fn generate(ast: Vec<FuncDeclar>) -> String {
     let mut result = String::new();
     for func in ast {
