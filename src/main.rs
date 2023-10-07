@@ -8,7 +8,8 @@ mod utils;
 fn main() {
     compile(r#"
 fn main() -> void {
-    println(succ(0));
+    let word: String = "Hello, world!";
+    println(word);
 }
 
 "#.to_string());

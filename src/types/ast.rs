@@ -14,6 +14,7 @@ pub struct VarDeclar {
     pub name: String,
     pub data_type: DataType,
     pub init: Option<Expression>,
+    pub is_mut: bool,
 }
 
 #[derive(Debug, Clone)]

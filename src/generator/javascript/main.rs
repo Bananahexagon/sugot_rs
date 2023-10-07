@@ -46,7 +46,7 @@ fn call_func(node: CallFunc) -> String {
 
 fn expression(node: Expression) -> String {
     match node {
-        Expression::Call(_) => unimplemented!(), //TODO: 実装する 2023-10-06
+        Expression::Call(c) => call_func(c), //TODO: 実装する 2023-10-06
         Expression::Value(v) => value(v),
         Expression::Calc(_) => unimplemented!(), //TODO: 実装する 2023-10-07
     }
@@ -58,6 +58,19 @@ fn value(node: Value) -> String {
     }
 }
 
-fn var_decl(_node: VarDeclar) -> String {
-    unimplemented!() //TODO: 実装する 2023-10-06
+fn var_decl(node: VarDeclar) -> String {
+    if node.init.is_some() {
+        return format!(
+            "{} {} = {};",
+            if node.is_mut { "let" } else { "const" },
+            node.name,
+            expression(node.init.unwrap())
+        );
+    } else {
+        return format!(
+            "{} {};",
+            if node.is_mut { "let" } else { "const" },
+            node.name,
+        );
+    }
 }

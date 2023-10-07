@@ -70,7 +70,43 @@ fn statement(tokens: &[Token]) -> Statement {
     }
 }
 
-fn var_declar(_tokens: &[Token]) -> VarDeclar {
+fn var_declar(tokens: &[Token]) -> VarDeclar {
+    println!("{:?}", tokens);
+    let location = Location {
+        start_line: tokens[0].location.start_line,
+        start_column: tokens[0].location.start_column,
+        end_line: tokens[tokens.len() - 1].location.end_line,
+        end_column: tokens[tokens.len() - 1].location.end_column,
+    };
+    let mut ptr = 0;
+    let is_mut = &tokens[ptr].val == "var";
+    ptr += 1;
+    let var_name = tokens[ptr].val.clone();
+    ptr += 1;
+    assert_eq!(tokens[ptr].val, ":");
+    ptr += 1;
+    let mut data_type_tokens = Vec::new();
+    while tokens[ptr].val != "=" && ptr < tokens.len() {
+        data_type_tokens.push(tokens[ptr].clone());
+        ptr += 1;
+    }
+    let mut init = None;
+    if tokens[ptr].val == "=" {
+        ptr += 1;
+        let mut init_tokens = Vec::new();
+        while ptr < tokens.len() {
+            init_tokens.push(tokens[ptr].clone());
+            ptr += 1;
+        }
+        init = Some(expression::parse(&init_tokens));
+    }
+    return VarDeclar {
+        location,
+        name: var_name,
+        data_type: data_type(data_type_tokens[0].clone()), //TODO: ちゃんとやる 2023-10-07
+        init,
+        is_mut,
+    };
     unimplemented!() //TODO: 変数宣言をパースできるようにする 2023-10-05
 }
 

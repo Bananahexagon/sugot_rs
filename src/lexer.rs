@@ -84,11 +84,11 @@ pub fn main(code: String) -> Vec<Token> {
             while current_ptr < code_len && code.chars().nth(current_ptr).unwrap() != '\n' {
                 current_ptr += 1;
             }
-        } else if match_long(&code[current_ptr..], &["(", ")", "{", "}"]).0 {
+        } else if match_long(&code[current_ptr..], &["(", ")", "{", "}", ":", "=", ";"]).0 {
             if !current_token.is_empty() {
                 push!();
             }
-            let matched = match_long(&code[current_ptr..], &["(", ")", "{", "}"]);
+            let matched = match_long(&code[current_ptr..], &["(", ")", "{", "}", ":", "=", ";"]);
             current_ptr += matched.1.as_ref().unwrap().len() - 1;
             current_token = matched.1.unwrap();
             push!();
