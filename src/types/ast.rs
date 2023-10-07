@@ -37,8 +37,17 @@ pub struct Block {
 
 #[derive(Debug, Clone)]
 pub enum Expression {
-    _Call(CallFunc),
+    Call(CallFunc),
     Value(Value),
+    Calc(Calc),
+}
+
+#[derive(Debug, Clone)]
+pub struct Calc {
+    pub location: Location,
+    pub op: String,
+    pub left: Box<Expression>,
+    pub right: Box<Expression>
 }
 
 #[derive(Debug, Clone)]

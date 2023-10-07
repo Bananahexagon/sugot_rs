@@ -46,8 +46,9 @@ fn call_func(node: CallFunc) -> String {
 
 fn expression(node: Expression) -> String {
     match node {
-        Expression::_Call(_) => unimplemented!(), //TODO: 実装する 2023-10-06
+        Expression::Call(_) => unimplemented!(), //TODO: 実装する 2023-10-06
         Expression::Value(v) => value(v),
+        Expression::Calc(_) => unimplemented!(), //TODO: 実装する 2023-10-07
     }
 }
 

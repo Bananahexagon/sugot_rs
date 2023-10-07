@@ -3,11 +3,12 @@ mod lexer;
 mod tests;
 mod parser;
 mod generator;
+mod utils;
 
 fn main() {
     compile(r#"
-fun main() -> void {
-    println("Hello, world!");
+fn main() -> void {
+    println(succ(0));
 }
 
 "#.to_string());
