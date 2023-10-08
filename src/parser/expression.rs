@@ -3,30 +3,56 @@ use crate::types::ast::*;
 use crate::types::general::*;
 
 #[derive(Debug, Clone)]
-enum Aos {
+enum AoT {
     Node(Expression),
     Token(Token),
 }
 
-pub fn parse(tokens: &[Token]) -> Expression {
+pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
     if tokens.len() == 1 {
-        return Expression::Value(main::value(tokens[0].clone()));
+        return Ok(Expression::Value(main::value(tokens[0].clone())?));
     } else {
         let nodes = paren(tokens);
-        if nodes.len() == 1 {
-            match nodes[0].clone() {
-                Aos::Node(n) => return n,
-                Aos::Token(_) => panic!(),
+        let parsed = binary_operation(
+            nodes?,
+            &[
+                &[
+                    ("*", "multi", "number"),
+                    ("/", "division", "number"),
+                    ("%", "division_not_much", "number"),
+                ],
+                &[("+", "add", "number"), ("-", "remove", "number")],
+                &[
+                    ("==", "equal", "bool"),
+                    ("!=", "n_equal", "bool"),
+                    ("<", "right_big", "bool"),
+                    ("<=", "maybe_right_big", "bool"),
+                    (">", "left_big", "bool"),
+                    (">=", "maybe_left_big", "bool"),
+                ],
+                &[("||", "or", "bool"), ("&&", "and", "bool")],
+            ],
+        )?;
+        assert!(parsed.len() == 1);
+        for token in parsed {
+            if let AoT::Node(e) = token {
+                return Ok(e);
+            } else if let AoT::Token(t) = token {
+                return Err(format!(
+                    "unknown operators: {} in {}:{} ~ {}:{}",
+                    t.val, tokens[0].location.start_column, tokens[0].location.start_line
+                    , tokens[tokens.len() - 1].location.end_column, tokens[tokens.len() - 1].location.end_line
+                ));
             }
         }
-        unimplemented!();
+        return Err(String::from("unreachable error!!!"));
     }
 }
 
-fn paren(tokens: &[Token]) -> Vec<Aos> {
+fn paren(tokens: &[Token]) -> Result<Vec<AoT>, String> {
     let mut stage: u32 = 0;
     let mut before_token: Option<Token> = None;
-    let mut outer: Vec<Aos> = Vec::new();
+    let mut outer: Vec<AoT> = Vec::new();
     let mut inner: Vec<Token> = Vec::new();
     for token in tokens {
         match &token.val[..] {
@@ -44,15 +70,15 @@ fn paren(tokens: &[Token]) -> Vec<Aos> {
                             "+" | "-" | "*" | "/"
                         )
                     {
-                        outer.push(Aos::Node(parse(&inner[1..inner.len() - 1])));
+                        outer.push(AoT::Node(parse(&inner[1..inner.len() - 1])?));
                     } else {
                         outer.pop();
-                        outer.push(Aos::Node(Expression::Call(main::call(
+                        outer.push(AoT::Node(Expression::Call(main::call(
                             &crate::utils::general::flatten_vec(vec![
                                 vec![before_token.unwrap()],
                                 inner,
                             ]),
-                        ))));
+                        )?)));
                         before_token = None;
                     }
                     inner = Vec::new();
@@ -61,7 +87,7 @@ fn paren(tokens: &[Token]) -> Vec<Aos> {
             _ => {
                 if stage == 0 {
                     before_token = Some(token.clone());
-                    outer.push(Aos::Token(token.clone()));
+                    outer.push(AoT::Token(token.clone()));
                 } else {
                     inner.push(token.clone());
                 }
@@ -69,5 +95,74 @@ fn paren(tokens: &[Token]) -> Vec<Aos> {
         }
     }
     println!("{:?}", outer);
-    return outer;
+    return Ok(outer);
+}
+
+fn binary_operation(
+    tokens: Vec<AoT>,
+    levels: &[&[(&str, &str, &str)]],
+) -> Result<Vec<AoT>, String> {
+    let mut stack2: Vec<AoT> = Vec::new();
+    let mut stack: Vec<AoT> = tokens;
+    for ops in levels {
+        let mut result: Option<Expression> = None;
+        let mut mode = "none".to_string();
+        'check_a_token: for token in stack {
+            if let AoT::Token(t) = token {
+                for op in *ops {
+                    if t.val == op.0 {
+                        mode = op.1.to_string();
+                        println!("{}", op.1);
+                        continue 'check_a_token;
+                    }
+                }
+                stack2.push(AoT::Node(result.unwrap()));
+                result = None;
+                stack2.push(AoT::Token(t));
+                mode = "others".to_string();
+            } else if let AoT::Node(node) = token {
+                if result.is_some() {
+                    if mode != "others" {
+                        result = Some(process(result, mode, node, "unknown")?);
+                        mode = "none".to_string();
+                    } else {
+                        stack2.push(AoT::Node(result.unwrap()));
+                        result = None;
+                    }
+                } else {
+                    result = Some(node);
+                }
+            }
+        }
+        if let Some(r) = result {
+            stack2.push(AoT::Node(r));
+        }
+        stack = stack2;
+        stack2 = Vec::new();
+    }
+    return Ok(stack);
+}
+
+fn process(
+    tmp: Option<Expression>,
+    mode: String,
+    value: Expression,
+    _data_type: &'static str,
+) -> Result<Expression, String> {
+    return if let Option::<Expression>::Some(v) = tmp {
+        Ok(Expression::Calc(Calc {
+            location: match &value {
+                Expression::Call(node) => node.location.clone(),
+                Expression::Calc(node) => node.location.clone(),
+                Expression::Value(node) => match node {
+                    Value::Literal(node) => node.location.clone(),
+                },
+            },
+            op: mode,
+            left: Box::new(v),
+            right: Box::new(value),
+        }))
+    } else {
+        Ok(value)
+    };
 }
