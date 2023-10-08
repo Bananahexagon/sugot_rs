@@ -13,6 +13,7 @@ pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
         return Ok(Expression::Value(main::value(tokens[0].clone())?));
     } else {
         let nodes = paren(tokens);
+        println!(r#""{:?}""#, nodes);
         let parsed = binary_operation(
             nodes?,
             &[
@@ -33,6 +34,7 @@ pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
                 &[("||", "or", "bool"), ("&&", "and", "bool")],
             ],
         )?;
+        println!(r#""{:?}""#, parsed);
         assert!(parsed.len() == 1);
         for token in parsed {
             if let AoT::Node(e) = token {
@@ -40,8 +42,11 @@ pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
             } else if let AoT::Token(t) = token {
                 return Err(format!(
                     "unknown operators: {} in {}:{} ~ {}:{}",
-                    t.val, tokens[0].location.start_column, tokens[0].location.start_line
-                    , tokens[tokens.len() - 1].location.end_column, tokens[tokens.len() - 1].location.end_line
+                    t.val,
+                    tokens[0].location.start_column,
+                    tokens[0].location.start_line,
+                    tokens[tokens.len() - 1].location.end_column,
+                    tokens[tokens.len() - 1].location.end_line
                 ));
             }
         }
@@ -67,7 +72,18 @@ fn paren(tokens: &[Token]) -> Result<Vec<AoT>, String> {
                     if before_token.is_none()
                         || matches!(
                             &before_token.as_ref().unwrap().val[..],
-                            "+" | "-" | "*" | "/"
+                            "+" | "-"
+                                | "*"
+                                | "/"
+                                | "%"
+                                | "=="
+                                | "!="
+                                | ">"
+                                | "<"
+                                | ">="
+                                | "<="
+                                | "&&"
+                                | "||"
                         )
                     {
                         outer.push(AoT::Node(parse(&inner[1..inner.len() - 1])?));
@@ -87,7 +103,25 @@ fn paren(tokens: &[Token]) -> Result<Vec<AoT>, String> {
             _ => {
                 if stage == 0 {
                     before_token = Some(token.clone());
-                    outer.push(AoT::Token(token.clone()));
+                    if matches!(
+                        &before_token.as_ref().unwrap().val[..],
+                        "+" | "-"
+                            | "*"
+                            | "/"
+                            | "%"
+                            | "=="
+                            | "!="
+                            | ">"
+                            | "<"
+                            | ">="
+                            | "<="
+                            | "&&"
+                            | "||"
+                    ) {
+                        outer.push(AoT::Token(token.clone()));
+                    } else {
+                        outer.push(AoT::Node(parse(&[token.clone()])?));
+                    }
                 } else {
                     inner.push(token.clone());
                 }
@@ -116,8 +150,10 @@ fn binary_operation(
                         continue 'check_a_token;
                     }
                 }
-                stack2.push(AoT::Node(result.unwrap()));
-                result = None;
+                if let Some(r) = result {
+                    stack2.push(AoT::Node(r));
+                    result = None;
+                };
                 stack2.push(AoT::Token(t));
                 mode = "others".to_string();
             } else if let AoT::Node(node) = token {
@@ -150,17 +186,15 @@ fn process(
     _data_type: &'static str,
 ) -> Result<Expression, String> {
     return if let Option::<Expression>::Some(v) = tmp {
-        Ok(Expression::Calc(Calc {
+        Ok(Expression::Call(CallFunc {
             location: match &value {
                 Expression::Call(node) => node.location.clone(),
-                Expression::Calc(node) => node.location.clone(),
                 Expression::Value(node) => match node {
                     Value::Literal(node) => node.location.clone(),
                 },
             },
-            op: mode,
-            left: Box::new(v),
-            right: Box::new(value),
+            func: format!("!op_{};", mode),
+            args: vec![v, value],
         }))
     } else {
         Ok(value)
