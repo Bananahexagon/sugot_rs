@@ -4,6 +4,7 @@ mod tests;
 mod parser;
 mod generator;
 mod utils;
+mod typechecker;
 
 fn main() -> Result<(), String> {
     compile(r#"

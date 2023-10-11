@@ -16,7 +16,7 @@ fn func_decl(declar: FuncDeclar) -> String {
         args.push_str(&format!("{},", arg.name))
     }
     let define = statement(declar.define);
-    return format!("const {} = ({}) => {{{}}}", name, args, define);
+    return format!("function {} ({}) {{{}}}", name, args, define);
 }
 
 fn statement(node: Statement) -> String {
@@ -48,7 +48,7 @@ fn call_func(node: CallFunc) -> String {
         if &name[i..i + 1] == "_" {
             match &call_type[..] {
                 "op" => format!(
-                    "{0} {2} {1}",
+                    "({0} {2} {1})",
                     expression(node.args[0].clone()),
                     expression(node.args[1].clone()),
                     match rest {
