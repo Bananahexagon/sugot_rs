@@ -3,9 +3,16 @@ use super::general::Location;
 pub struct FuncDeclar {
     pub location: Location,
     pub name: String,
-    pub input_types: Vec<VarDeclar>,
+    pub input_types: Vec<FuncArgs>,
     pub return_type: DataType,
     pub define: Statement,
+}
+
+#[derive(Debug, Clone)]
+pub struct FuncArgs {
+    pub location: Location,
+    pub name: String,
+    pub data_type: DataType,
 }
 
 #[derive(Debug, Clone)]

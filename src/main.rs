@@ -22,6 +22,7 @@ fn compile(code: String) -> Result<String,String> {
     println!("{:#?}", tokens);
     let ast = parser::main::main(tokens)?;
     println!("{:#?}", ast);
+    typechecker::main::entry(&ast)?;
     let code = generator::javascript::main::generate(ast);
     println!("{}", code);
     Ok(code)
