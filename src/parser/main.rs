@@ -65,7 +65,8 @@ fn func_decl(tokens: &[Token]) -> Result<FuncDeclar,String> {
 fn statement(tokens: &[Token]) ->Result<Statement,String> {
     Ok(match &(tokens[0].val[..]) {
         "{" => Statement::Block(block(tokens)?),
-        "let" => Statement::VarDeclar(var_declar(tokens)?),
+        "let" | "var" => Statement::VarDeclar(var_declar(tokens)?),
+        "return" => Statement::Return(expression::parse(&tokens[1..])?),
         _ => Statement::Call(call(tokens)?),
     })
 }

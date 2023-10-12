@@ -35,6 +35,7 @@ pub enum Statement {
     Block(Block),
     VarDeclar(VarDeclar),
     Call(CallFunc),
+    Return(Expression),
 }
 
 #[derive(Debug, Clone)]

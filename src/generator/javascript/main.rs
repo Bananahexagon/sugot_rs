@@ -16,14 +16,15 @@ fn func_decl(declar: FuncDeclar) -> String {
         args.push_str(&format!("{},", arg.name))
     }
     let define = statement(declar.define);
-    return format!("function {} ({}) {{{}}}", name, args, define);
+    return format!("function {} ({}) {{{}}};", name, args, define);
 }
 
 fn statement(node: Statement) -> String {
     match node {
         Statement::Block(node) => block(node),
-        Statement::Call(node) => call_func(node),
-        Statement::VarDeclar(node) => var_decl(node), //TODO: 実装する 2023-10-06
+        Statement::Call(node) => format!("{};",call_func(node)),
+        Statement::VarDeclar(node) => var_decl(node),
+        Statement::Return(node) => format!("return {};",expression(node)),
     }
 }
 

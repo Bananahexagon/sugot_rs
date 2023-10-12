@@ -8,9 +8,10 @@ mod typechecker;
 
 fn main() -> Result<(), String> {
     compile(r#"
-fn main() -> void {
+fn main() -> unit {
+    let a: int = 5;
     println(1 + 2);
-    println(1 + 2 + 3);
+    return unit;
 }
 
 "#.to_string())?;
