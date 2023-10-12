@@ -3,7 +3,7 @@ use crate::types::general::*;
 
 use super::expression;
 
-pub fn main(tokens: Vec<Token>) -> Result<Vec<FuncDeclar>,String> {
+pub fn main(tokens: Vec<Token>) -> Result<Vec<FuncDeclar>, String> {
     let mut stage = 0;
     let mut decl = Vec::new();
     let mut result = Vec::<FuncDeclar>::new();
@@ -28,7 +28,7 @@ pub fn main(tokens: Vec<Token>) -> Result<Vec<FuncDeclar>,String> {
     return Ok(result);
 }
 
-fn func_decl(tokens: &[Token]) -> Result<FuncDeclar,String> {
+fn func_decl(tokens: &[Token]) -> Result<FuncDeclar, String> {
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -42,6 +42,46 @@ fn func_decl(tokens: &[Token]) -> Result<FuncDeclar,String> {
     ptr += 1;
     assert_eq!(tokens[ptr].val, "(");
     ptr += 1;
+    let mut args = Vec::<FuncArgs>::new();
+    let mut stage = 1;
+    let mut current_arg: Vec<Token> = Vec::new();
+    while stage != 0 && ptr < tokens.len() {
+        println!("{:?}", tokens[ptr]);
+        if matches!(&tokens[ptr].val[..], "(" | "{") {
+            stage += 1;
+        } else if matches!(&tokens[ptr].val[..], ")" | "}") {
+            stage -= 1;
+        }
+        if stage != 0 {
+            if tokens[ptr].val == "," && stage == 1 {
+                args.push(FuncArgs {
+                    location: Location {
+                        start_line: current_arg[0].location.start_line,
+                        start_column: current_arg[0].location.start_column,
+                        end_line: current_arg[current_arg.len() - 1].location.end_line,
+                        end_column: current_arg[current_arg.len() - 1].location.end_column,
+                    },
+                    name: current_arg[0].val.clone(),
+                    data_type: data_type(current_arg[2].clone())?,
+                });
+            } else {
+                current_arg.push(tokens[ptr].clone());
+            };
+            ptr += 1;
+        }
+    }
+    if !current_arg.is_empty() {
+        args.push(FuncArgs {
+            location: Location {
+                start_line: current_arg[0].location.start_line,
+                start_column: current_arg[0].location.start_column,
+                end_line: current_arg[current_arg.len() - 1].location.end_line,
+                end_column: current_arg[current_arg.len() - 1].location.end_column,
+            },
+            name: current_arg[0].val.clone(),
+            data_type: data_type(current_arg[2].clone())?,
+        });
+    }
     assert_eq!(tokens[ptr].val, ")");
     ptr += 1;
     assert_eq!(tokens[ptr].val, "->");
@@ -56,13 +96,13 @@ fn func_decl(tokens: &[Token]) -> Result<FuncDeclar,String> {
     return Ok(FuncDeclar {
         location: location,
         name: name,
-        input_types: vec![], //TODO 今は入力を取らない関数だけ 2023-10-03
+        input_types: args, //TODO 今は入力を取らない関数だけ 2023-10-03
         return_type: data_type(return_type)?,
         define: statement(&define)?,
     });
 }
 
-fn statement(tokens: &[Token]) ->Result<Statement,String> {
+fn statement(tokens: &[Token]) -> Result<Statement, String> {
     Ok(match &(tokens[0].val[..]) {
         "{" => Statement::Block(block(tokens)?),
         "let" | "var" => Statement::VarDeclar(var_declar(tokens)?),
@@ -71,7 +111,7 @@ fn statement(tokens: &[Token]) ->Result<Statement,String> {
     })
 }
 
-fn var_declar(tokens: &[Token]) -> Result<VarDeclar,String> {
+fn var_declar(tokens: &[Token]) -> Result<VarDeclar, String> {
     println!("{:?}", tokens);
     let location = Location {
         start_line: tokens[0].location.start_line,
@@ -110,7 +150,7 @@ fn var_declar(tokens: &[Token]) -> Result<VarDeclar,String> {
     });
 }
 
-pub fn call(tokens: &[Token]) -> Result<CallFunc,String> {
+pub fn call(tokens: &[Token]) -> Result<CallFunc, String> {
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -148,10 +188,10 @@ pub fn call(tokens: &[Token]) -> Result<CallFunc,String> {
         location: location,
         func: func_name,
         args: args,
-    }) //TODO: 引数をちゃんとする 2023-10-05
+    })
 }
 
-fn block(tokens: &[Token]) -> Result<Block ,String>{
+fn block(tokens: &[Token]) -> Result<Block, String> {
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -191,18 +231,18 @@ fn block(tokens: &[Token]) -> Result<Block ,String>{
     });
 }
 
-pub fn value(token: Token) -> Result<Value,String> {
+pub fn value(token: Token) -> Result<Value, String> {
     Ok(Value::Literal(literal(token)?)) // TODO: ちゃんとやる 2023-10-05
 }
 
-fn literal(token: Token) -> Result<Literal,String> {
+fn literal(token: Token) -> Result<Literal, String> {
     Ok(Literal {
         location: token.location,
         val: token.val,
     })
 }
 
-fn data_type(token: Token) -> Result<DataType,String> {
+fn data_type(token: Token) -> Result<DataType, String> {
     Ok(DataType {
         location: token.location,
         val: token.val,

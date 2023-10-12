@@ -1,24 +1,28 @@
-mod types;
-mod lexer;
-mod tests;
-mod parser;
 mod generator;
-mod utils;
+mod lexer;
+mod parser;
+mod tests;
 mod typechecker;
+mod types;
+mod utils;
 
 fn main() -> Result<(), String> {
-    compile(r#"
+    compile(
+        r#"
 fn main() -> unit {
-    let a: int = 5;
-    println(1 + 2);
-    return unit;
+    println(five());
 }
 
-"#.to_string())?;
+fn five(arg: int) -> int {
+    return 5;
+}
+"#
+        .to_string(),
+    )?;
     Ok(())
 }
 
-fn compile(code: String) -> Result<String,String> {
+fn compile(code: String) -> Result<String, String> {
     let tokens = lexer::main(code);
     println!("{:#?}", tokens);
     let ast = parser::main::main(tokens)?;
