@@ -36,6 +36,14 @@ pub enum Statement {
     VarDeclar(VarDeclar),
     Call(CallFunc),
     Return(Expression),
+    If(If),
+}
+#[derive(Debug, Clone)]
+pub struct If {
+    pub location: Location,
+    pub condition:Expression,
+    pub then_contents: Vec<Statement>,
+    pub else_contents: Option<Vec<Statement>>,
 }
 
 #[derive(Debug, Clone)]

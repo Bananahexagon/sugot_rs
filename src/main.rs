@@ -13,7 +13,7 @@ fn main() -> unit {
     println(five());
 }
 
-fn five(arg: int) -> int {
+fn five(arg: i32) -> i32 {
     return 5;
 }
 "#

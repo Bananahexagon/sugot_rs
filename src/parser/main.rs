@@ -248,3 +248,27 @@ fn data_type(token: Token) -> Result<DataType, String> {
         val: token.val,
     }) // TODO: ちゃんとやる 2023-10-05
 }
+
+fn if_statement(tokens: &[Token]) -> Result<If, String> {
+    let location = Location {
+        start_line: tokens[0].location.start_line,
+        start_column: tokens[0].location.start_column,
+        end_line: tokens[tokens.len() - 1].location.end_line,
+        end_column: tokens[tokens.len() - 1].location.end_column,
+    };
+    let mut ptr = 0;
+    assert_eq!(tokens[ptr].val, "if");
+    ptr += 1;
+    let mut stage = 0;
+    let mut condition = Vec::new();
+    while !(tokens[ptr].val == "{" && stage == 0) {
+        if matches!(&tokens[ptr].val[..], "(" | "{") {
+            stage += 1;
+        } else if matches!(&tokens[ptr].val[..], ")" | "}") {
+            stage -= 1;
+        }
+        condition.push(tokens[ptr].clone());
+        ptr += 1;
+    }
+    unimplemented!() //TODO 実装する 2023-10-17
+}
