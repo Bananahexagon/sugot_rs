@@ -22,9 +22,27 @@ fn func_decl(declar: FuncDeclar) -> String {
 fn statement(node: Statement) -> String {
     match node {
         Statement::Block(node) => block(node),
-        Statement::Call(node) => format!("{};",call_func(node)),
+        Statement::Call(node) => format!("{};", call_func(node)),
         Statement::VarDeclar(node) => var_decl(node),
-        Statement::Return(node) => format!("return {};",expression(node)),
+        Statement::Return(node) => format!("return {};", expression(node)),
+        Statement::If(node) => format!("{};", if_statement(node)),
+    }
+}
+
+fn if_statement(node: If) -> String {
+    if node.else_contents.is_none() {
+        format!(
+            "if ({}) {{{}}}",
+            expression(node.condition),
+            block(node.then_contents)
+        )
+    } else {
+        format!(
+            "if ({}) {} else {{{}}}",
+            expression(node.condition),
+            block(node.then_contents),
+            block(node.else_contents.unwrap())
+        )
     }
 }
 

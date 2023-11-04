@@ -42,8 +42,8 @@ pub enum Statement {
 pub struct If {
     pub location: Location,
     pub condition:Expression,
-    pub then_contents: Vec<Statement>,
-    pub else_contents: Option<Vec<Statement>>,
+    pub then_contents: Block,
+    pub else_contents: Option<Block>,
 }
 
 #[derive(Debug, Clone)]

@@ -107,6 +107,7 @@ fn statement(tokens: &[Token]) -> Result<Statement, String> {
         "{" => Statement::Block(block(tokens)?),
         "let" | "var" => Statement::VarDeclar(var_declar(tokens)?),
         "return" => Statement::Return(expression::parse(&tokens[1..])?),
+        "if" => Statement::If(if_statement(tokens)?),
         _ => Statement::Call(call(tokens)?),
     })
 }
@@ -270,5 +271,25 @@ fn if_statement(tokens: &[Token]) -> Result<If, String> {
         condition.push(tokens[ptr].clone());
         ptr += 1;
     }
-    unimplemented!() //TODO 実装する 2023-10-17
+
+    let mut then_contents = Vec::new();
+    while !(tokens[ptr - 1].val == "}" && stage == 0) {
+        if matches!(&tokens[ptr].val[..], "(" | "{") {
+            stage += 1;
+        } else if matches!(&tokens[ptr].val[..], ")" | "}") {
+            stage -= 1;
+        }
+        then_contents.push(tokens[ptr].clone());
+        ptr += 1;
+    }
+    if !(ptr < tokens.len() && tokens[ptr].val == "else") {
+        return Ok(If {
+            location: location,
+            condition: expression::parse(&condition)?,
+            then_contents: block(&then_contents)?,
+            else_contents: None,
+        });
+    } else {
+        unimplemented!() //TODO 実装する 2023-10-17
+    }
 }

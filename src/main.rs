@@ -10,11 +10,16 @@ fn main() -> Result<(), String> {
     compile(
         r#"
 fn main() -> unit {
-    println(five());
+    println(five(0));
 }
 
 fn five(arg: i32) -> i32 {
-    return 5;
+    if arg == 5 {
+        return true;
+    };
+    if arg != 5 {
+        return false;
+    };
 }
 "#
         .to_string(),
