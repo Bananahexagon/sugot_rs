@@ -4,7 +4,7 @@ use super::libjs;
 
 pub fn generate(ast: Vec<FuncDeclar>) -> String {
     let mut result = String::new();
-    result.push_str(libjs::io::code);
+    result.push_str(libjs::io::CODE);
     for func in ast {
         result.push_str(&func_decl(func));
     }
