@@ -10,7 +10,7 @@ enum AoT {
 
 pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
     if tokens.len() == 1 {
-        return Ok(Expression::Value(main::value(tokens[0].clone())?));
+        Ok(Expression::Value(main::value(tokens[0].clone())?))
     } else {
         let nodes = paren(tokens);
         println!(r#""{:?}""#, nodes);
@@ -50,7 +50,7 @@ pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
                 ));
             }
         }
-        return Err(String::from("unreachable error!!!"));
+        Err(String::from("unreachable error!!!"))
     }
 }
 
@@ -129,7 +129,7 @@ fn paren(tokens: &[Token]) -> Result<Vec<AoT>, String> {
         }
     }
     println!("{:?}", outer);
-    return Ok(outer);
+    Ok(outer)
 }
 
 fn binary_operation(
@@ -176,7 +176,7 @@ fn binary_operation(
         stack = stack2;
         stack2 = Vec::new();
     }
-    return Ok(stack);
+    Ok(stack)
 }
 
 fn process(
@@ -185,7 +185,7 @@ fn process(
     value: Expression,
     _data_type: &'static str,
 ) -> Result<Expression, String> {
-    return if let Option::<Expression>::Some(v) = tmp {
+    if let Option::<Expression>::Some(v) = tmp {
         Ok(Expression::Call(CallFunc {
             location: match &value {
                 Expression::Call(node) => node.location.clone(),
@@ -198,5 +198,5 @@ fn process(
         }))
     } else {
         Ok(value)
-    };
+    }
 }

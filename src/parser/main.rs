@@ -25,7 +25,7 @@ pub fn main(tokens: Vec<Token>) -> Result<Vec<FuncDeclar>, String> {
     } else {
         panic!();
     }
-    return Ok(result);
+    Ok(result)
 }
 
 fn func_decl(tokens: &[Token]) -> Result<FuncDeclar, String> {
@@ -93,13 +93,13 @@ fn func_decl(tokens: &[Token]) -> Result<FuncDeclar, String> {
         define.push(tokens[ptr].clone());
         ptr += 1;
     }
-    return Ok(FuncDeclar {
-        location: location,
-        name: name,
+    Ok(FuncDeclar {
+        location,
+        name,
         input_types: args, //TODO 今は入力を取らない関数だけ 2023-10-03
         return_type: data_type(return_type)?,
         define: statement(&define)?,
-    });
+    })
 }
 
 fn statement(tokens: &[Token]) -> Result<Statement, String> {
@@ -142,13 +142,13 @@ fn var_declar(tokens: &[Token]) -> Result<VarDeclar, String> {
         }
         init = Some(expression::parse(&init_tokens)?);
     }
-    return Ok(VarDeclar {
+    Ok(VarDeclar {
         location,
         name: var_name,
         data_type: data_type(data_type_tokens[0].clone())?, //TODO: ちゃんとやる 2023-10-07
         init,
         is_mut,
-    });
+    })
 }
 
 pub fn call(tokens: &[Token]) -> Result<CallFunc, String> {
@@ -186,9 +186,9 @@ pub fn call(tokens: &[Token]) -> Result<CallFunc, String> {
     }
     assert_eq!(tokens[ptr].val, ")");
     Ok(CallFunc {
-        location: location,
+        location,
         func: func_name,
-        args: args,
+        args,
     })
 }
 
@@ -226,10 +226,10 @@ fn block(tokens: &[Token]) -> Result<Block, String> {
         }
         i += 1;
     }
-    return Ok(Block {
-        location: location,
+    Ok(Block {
+        location,
         contents: result,
-    });
+    })
 }
 
 pub fn value(token: Token) -> Result<Value, String> {
@@ -283,12 +283,12 @@ fn if_statement(tokens: &[Token]) -> Result<If, String> {
         ptr += 1;
     }
     if !(ptr < tokens.len() && tokens[ptr].val == "else") {
-        return Ok(If {
-            location: location,
+        Ok(If {
+            location,
             condition: expression::parse(&condition)?,
             then_contents: block(&then_contents)?,
             else_contents: None,
-        });
+        })
     } else {
         unimplemented!() //TODO 実装する 2023-10-17
     }

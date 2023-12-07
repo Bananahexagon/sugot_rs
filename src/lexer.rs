@@ -112,7 +112,7 @@ pub fn main(code: String) -> Vec<Token> {
 
         current_ptr += 1;
     }
-    return result;
+    result
 }
 
 fn match_long(left: &str, rights: &[&str]) -> (bool, Option<String>) {
@@ -141,5 +141,5 @@ fn match_string_open(left: &str) -> Option<u32> {
             return None;
         }
     }
-    return None;
+    None
 }

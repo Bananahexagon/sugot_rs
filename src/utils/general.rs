@@ -5,5 +5,5 @@ pub fn flatten_vec<T>(vv: Vec<Vec<T>>) -> Vec<T> {
             result.push(p);
         }
     }
-    return result;
+    result
 }

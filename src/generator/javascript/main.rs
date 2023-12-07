@@ -9,7 +9,7 @@ pub fn generate(ast: Vec<FuncDeclar>) -> String {
         result.push_str(&func_decl(func));
     }
     result.push_str("\nmain();");
-    return result;
+    result
 }
 
 fn func_decl(declar: FuncDeclar) -> String {
@@ -19,7 +19,7 @@ fn func_decl(declar: FuncDeclar) -> String {
         args.push_str(&format!("{},", arg.name))
     }
     let define = statement(declar.define);
-    return format!("function {} ({}) {{{}}};", name, args, define);
+    format!("function {} ({}) {{{}}};", name, args, define)
 }
 
 fn statement(node: Statement) -> String {
@@ -54,7 +54,7 @@ fn block(node: Block) -> String {
     for content in node.contents {
         block.push_str(&statement(content));
     }
-    return block;
+    block
 }
 
 fn call_func(node: CallFunc) -> String {
@@ -119,17 +119,17 @@ fn value(node: Value) -> String {
 
 fn var_decl(node: VarDeclar) -> String {
     if node.init.is_some() {
-        return format!(
+        format!(
             "{} {} = {};",
             if node.is_mut { "let" } else { "const" },
             node.name,
             expression(node.init.unwrap())
-        );
+        )
     } else {
-        return format!(
+        format!(
             "{} {};",
             if node.is_mut { "let" } else { "const" },
             node.name,
-        );
+        )
     }
 }
