@@ -108,6 +108,7 @@ fn statement(tokens: &[Token]) -> Result<Statement, String> {
         "let" | "var" => Statement::VarDeclar(var_declar(tokens)?),
         "return" => Statement::Return(expression::parse(&tokens[1..])?),
         "if" => Statement::If(if_statement(tokens)?),
+        "while" => Statement::While(while_statement(tokens)?),
         _ => Statement::Call(call(tokens)?),
     })
 }
@@ -325,4 +326,43 @@ fn if_statement(tokens: &[Token]) -> Result<If, String> {
     } else {
         Err(format!("unxepected token '{}'", tokens[ptr].val))
     }
+}
+
+fn while_statement(tokens: &[Token]) -> Result<While, String> {
+    let location = Location {
+        start_line: tokens[0].location.start_line,
+        start_column: tokens[0].location.start_column,
+        end_line: tokens[tokens.len() - 1].location.end_line,
+        end_column: tokens[tokens.len() - 1].location.end_column,
+    };
+    let mut ptr = 0;
+    assert_eq!(tokens[ptr].val, "while");
+    ptr += 1;
+    let mut stage = 0;
+    let mut condition = Vec::new();
+    while !(tokens[ptr].val == "{" && stage == 0) {
+        if matches!(&tokens[ptr].val[..], "(" | "{") {
+            stage += 1;
+        } else if matches!(&tokens[ptr].val[..], ")" | "}") {
+            stage -= 1;
+        }
+        condition.push(tokens[ptr].clone());
+        ptr += 1;
+    }
+
+    let mut contents = Vec::new();
+    while !(tokens[ptr - 1].val == "}" && stage == 0) {
+        if matches!(&tokens[ptr].val[..], "(" | "{") {
+            stage += 1;
+        } else if matches!(&tokens[ptr].val[..], ")" | "}") {
+            stage -= 1;
+        }
+        contents.push(tokens[ptr].clone());
+        ptr += 1;
+    }
+    Ok(While {
+        location,
+        condition: expression::parse(&condition)?,
+        contents: block(&contents)?,
+    })
 }

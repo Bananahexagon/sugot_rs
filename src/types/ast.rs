@@ -37,6 +37,7 @@ pub enum Statement {
     Call(CallFunc),
     Return(Expression),
     If(If),
+    While(While),
 }
 #[derive(Debug, Clone)]
 pub struct If {
@@ -44,6 +45,13 @@ pub struct If {
     pub condition:Expression,
     pub then_contents: Block,
     pub else_contents: Option<Block>,
+}
+
+#[derive(Debug, Clone)]
+pub struct While {
+    pub location: Location,
+    pub condition:Expression,
+    pub contents: Block,
 }
 
 #[derive(Debug, Clone)]
