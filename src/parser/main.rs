@@ -289,7 +289,40 @@ fn if_statement(tokens: &[Token]) -> Result<If, String> {
             then_contents: block(&then_contents)?,
             else_contents: None,
         })
+    } else if ptr + 1 < tokens.len() && tokens[ptr].val == "else" {
+        ptr += 1;
+        if tokens[ptr].val == "if" {
+            Ok(If {
+                location,
+                condition: expression::parse(&condition)?,
+                then_contents: block(&then_contents)?,
+                else_contents: Some({
+                    let tmp = if_statement(&tokens[ptr..])?;
+                    Block {
+                        location: tmp.location.clone(),
+                        contents: vec![Statement::If(tmp)],
+                    }
+                }),
+            })
+        } else {
+            let mut else_contents = Vec::new();
+            while !(tokens[ptr - 1].val == "}" && stage == 0) {
+                if matches!(&tokens[ptr].val[..], "(" | "{") {
+                    stage += 1;
+                } else if matches!(&tokens[ptr].val[..], ")" | "}") {
+                    stage -= 1;
+                }
+                else_contents.push(tokens[ptr].clone());
+                ptr += 1;
+            }
+            Ok(If {
+                location,
+                condition: expression::parse(&condition)?,
+                then_contents: block(&then_contents)?,
+                else_contents: Some(block(&else_contents)?),
+            })
+        }
     } else {
-        unimplemented!() //TODO 実装する 2023-10-17
+        Err(format!("unxepected token '{}'", tokens[ptr].val))
     }
 }

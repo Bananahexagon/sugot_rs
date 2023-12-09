@@ -41,7 +41,7 @@ fn if_statement(node: If) -> String {
         )
     } else {
         format!(
-            "if ({}) {} else {{{}}}",
+            "if ({}) {{{}}} else {{{}}}",
             expression(node.condition),
             block(node.then_contents),
             block(node.else_contents.unwrap())

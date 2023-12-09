@@ -13,12 +13,13 @@ fn main() -> unit {
     println(five(0));
 }
 
-fn five(arg: i32) -> i32 {
+fn five(arg: i32) -> str {
     if arg == 5 {
-        return true;
-    };
-    if arg != 5 {
-        return false;
+        return "five";
+    } else if arg < 5 {
+        return "too small!";
+    } else {
+        return "too big!";
     };
 }
 "#
