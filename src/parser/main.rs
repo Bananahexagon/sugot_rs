@@ -109,7 +109,11 @@ fn statement(tokens: &[Token]) -> Result<Statement, String> {
         "return" => Statement::Return(expression::parse(&tokens[1..])?),
         "if" => Statement::If(if_statement(tokens)?),
         "while" => Statement::While(while_statement(tokens)?),
-        _ => Statement::Call(call(tokens)?),
+        _ => match &(tokens[1].val[..]) {
+            "=" => Statement::VarSet(var_set(tokens)?),
+            "(" => Statement::Call(call(tokens)?),
+            _ => return Err("".to_string()),
+        },
     })
 }
 
@@ -149,6 +153,33 @@ fn var_declar(tokens: &[Token]) -> Result<VarDeclar, String> {
         data_type: data_type(data_type_tokens[0].clone())?, //TODO: ちゃんとやる 2023-10-07
         init,
         is_mut,
+    })
+}
+
+fn var_set(tokens: &[Token]) -> Result<VarSet, String> {
+    println!("{:?}", tokens);
+    let location = Location {
+        start_line: tokens[0].location.start_line,
+        start_column: tokens[0].location.start_column,
+        end_line: tokens[tokens.len() - 1].location.end_line,
+        end_column: tokens[tokens.len() - 1].location.end_column,
+    };
+    let mut ptr = 0;
+    let var_name = tokens[ptr].val.clone();
+    ptr += 1;
+    assert_eq!(tokens[ptr].val, "=");
+    ptr += 1;
+    let mut val_tokens = Vec::new();
+    while ptr < tokens.len() {
+        val_tokens.push(tokens[ptr].clone());
+        ptr += 1;
+    }
+    let val = expression::parse(&val_tokens)?;
+
+    Ok(VarSet {
+        location,
+        name: var_name,
+        val,
     })
 }
 
@@ -349,7 +380,7 @@ fn while_statement(tokens: &[Token]) -> Result<While, String> {
         condition.push(tokens[ptr].clone());
         ptr += 1;
     }
-
+    assert_eq!(tokens[ptr].val, "{");
     let mut contents = Vec::new();
     while !(tokens[ptr - 1].val == "}" && stage == 0) {
         if matches!(&tokens[ptr].val[..], "(" | "{") {
@@ -360,6 +391,7 @@ fn while_statement(tokens: &[Token]) -> Result<While, String> {
         contents.push(tokens[ptr].clone());
         ptr += 1;
     }
+    println!("W:{:?}", contents);
     Ok(While {
         location,
         condition: expression::parse(&condition)?,

@@ -25,6 +25,13 @@ pub struct VarDeclar {
 }
 
 #[derive(Debug, Clone)]
+pub struct VarSet {
+    pub location: Location,
+    pub name: String,
+    pub val: Expression,
+}
+
+#[derive(Debug, Clone)]
 pub struct DataType {
     pub location: Location,
     pub val: String,
@@ -34,6 +41,7 @@ pub struct DataType {
 pub enum Statement {
     Block(Block),
     VarDeclar(VarDeclar),
+    VarSet(VarSet),
     Call(CallFunc),
     Return(Expression),
     If(If),

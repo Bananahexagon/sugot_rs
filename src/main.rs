@@ -10,16 +10,18 @@ fn main() -> Result<(), String> {
     compile(
         r#"
 fn main() -> unit {
-    println(five(0));
-}
-
-fn five(arg: i32) -> str {
-    if arg == 5 {
-        return "five";
-    } else if arg < 5 {
-        return "too small!";
-    } else {
-        return "too big!";
+    var i:int = 0;
+    while i < 100 {
+        i = i + 1;
+        if i % 15 == 0 {
+            println("FizzBuzz");
+        } else if i % 5 == 0 {
+            println("Buzz");
+        } else if i % 3 == 0 {
+            println("Fizz");
+        } else {
+            println(i);
+        };
     };
 }
 "#

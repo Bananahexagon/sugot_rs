@@ -27,6 +27,7 @@ fn statement(node: Statement) -> String {
         Statement::Block(node) => block(node),
         Statement::Call(node) => format!("{};", call_func(node)),
         Statement::VarDeclar(node) => var_decl(node),
+        Statement::VarSet(node) => var_set(node),
         Statement::Return(node) => format!("return {};", expression(node)),
         Statement::If(node) => format!("{};", if_statement(node)),
         Statement::While(node) => format!("{};", while_statement(node)),
@@ -50,11 +51,11 @@ fn if_statement(node: If) -> String {
     }
 }
 fn while_statement(node: While) -> String {
-        format!(
-            "while ({}) {{{}}}",
-            expression(node.condition),
-            block(node.contents)
-        )
+    format!(
+        "while ({}) {{{}}}",
+        expression(node.condition),
+        block(node.contents)
+    )
 }
 
 fn block(node: Block) -> String {
@@ -140,4 +141,8 @@ fn var_decl(node: VarDeclar) -> String {
             node.name,
         )
     }
+}
+
+fn var_set(node: VarSet) -> String {
+    format!("{} = {};", node.name, expression(node.val))
 }
