@@ -18,7 +18,7 @@ fn func_decl(declar: FuncDeclar) -> String {
     for arg in declar.input_types {
         args.push_str(&format!("{},", arg.name))
     }
-    let define = statement(declar.define);
+    let define =block(declar.define);
     format!("function {} ({}) {{{}}};", name, args, define)
 }
 

@@ -5,7 +5,7 @@ pub struct FuncDeclar {
     pub name: String,
     pub input_types: Vec<FuncArgs>,
     pub return_type: DataType,
-    pub define: Statement,
+    pub define: Block,
 }
 
 #[derive(Debug, Clone)]

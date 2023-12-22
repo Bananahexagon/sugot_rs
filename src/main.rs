@@ -10,7 +10,7 @@ fn main() -> Result<(), String> {
     compile(
         r#"
 fn main() -> unit {
-    var i:int = 0;
+    var i: i32 = 0;
     while i < 100 {
         i = i + 1;
         if i % 15 == 0 {

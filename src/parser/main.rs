@@ -98,7 +98,7 @@ fn func_decl(tokens: &[Token]) -> Result<FuncDeclar, String> {
         name,
         input_types: args, //TODO 今は入力を取らない関数だけ 2023-10-03
         return_type: data_type(return_type)?,
-        define: statement(&define)?,
+        define: block(&define)?,
     })
 }
 
