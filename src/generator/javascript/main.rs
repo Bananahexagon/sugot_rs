@@ -2,11 +2,14 @@ use crate::types::ast::*;
 
 use super::libjs;
 
-pub fn generate(ast: Vec<FuncDeclar>) -> String {
+pub fn generate(ast: Vec<Declars>) -> String {
     let mut result = String::new();
     result.push_str(libjs::io::CODE);
-    for func in ast {
-        result.push_str(&func_decl(func));
+    for decl in ast {
+        match decl {
+            Declars::Func(func) => result.push_str(&func_decl(func)),
+            _ => (),
+        }
     }
     result.push_str("\nmain();");
     result
@@ -18,7 +21,7 @@ fn func_decl(declar: FuncDeclar) -> String {
     for arg in declar.input_types {
         args.push_str(&format!("{},", arg.name))
     }
-    let define =block(declar.define);
+    let define = block(declar.define);
     format!("function {} ({}) {{{}}};", name, args, define)
 }
 

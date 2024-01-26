@@ -1,34 +1,75 @@
+use std::collections::HashSet;
+
 use crate::types::ast::*;
 use crate::types::general::*;
 
 use super::expression;
 
-pub fn main(tokens: Vec<Token>) -> Result<Vec<FuncDeclar>, String> {
+pub fn main(tokens: Vec<Token>) -> Result<Vec<Declars>, String> {
     let mut stage = 0;
-    let mut decl = Vec::new();
-    let mut result = Vec::<FuncDeclar>::new();
+    let mut decl: Vec<Token> = Vec::new();
+    let mut result = Vec::new();
     for token in tokens {
         if matches!(&token.val[..], "(" | "{") {
             stage += 1;
         } else if matches!(&token.val[..], ")" | "}") {
             stage -= 1;
-        } else if &token.val == "fn" && stage == 0 && !decl.is_empty() {
-            result.push(func_decl(&decl)?);
+        } else if matches!(&token.val[..], "fn" | "import") && stage == 0 && !decl.is_empty() {
+            result.push(match &decl[0].val[..] {
+                "fn" => Declars::Func(func_declar(&decl)?),
+                "import" => Declars::Import(import_statement(&decl)?),
+                _ => return Err(format!("TODO")) //TODO 2024-01-26
+            });
             decl = Vec::new();
         };
         decl.push(token);
     }
     if stage == 0 {
         if !decl.is_empty() {
-            result.push(func_decl(&decl)?);
+            result.push(match &decl[0].val[..] {
+                "fn" => Declars::Func(func_declar(&decl)?),
+                "import" => Declars::Import(import_statement(&decl)?),
+                _ => return Err(format!("TODO")) //TODO 2024-01-26
+            });
         }
     } else {
         panic!();
     }
     Ok(result)
 }
-
-fn func_decl(tokens: &[Token]) -> Result<FuncDeclar, String> {
+fn import_statement(tokens: &[Token]) -> Result<Import, String> {
+    let location = Location {
+        start_line: tokens[0].location.start_line,
+        start_column: tokens[0].location.start_column,
+        end_line: tokens[tokens.len() - 1].location.end_line,
+        end_column: tokens[tokens.len() - 1].location.end_column,
+    };
+    let mut contents = HashSet::new();
+    let mut path = Vec::new();
+    let mut ptr = 0;
+    assert_eq!(tokens[ptr].val, "import");
+    ptr += 1;
+    assert_eq!(tokens[ptr].val, "{");
+    ptr += 1;
+    while tokens[ptr].val != "}" {
+        if (tokens[ptr].val != ",") == (ptr%2==1) {
+            return Err(format!("TODO")) //TODO 2024-01-26
+        } else if tokens[ptr].val != "," {
+            contents.insert(tokens[ptr].val.clone());
+        }
+        ptr += 1;
+    }
+    assert_eq!(tokens[ptr].val, "}");
+    ptr += 1;
+    assert_eq!(tokens[ptr].val, "from");
+    ptr += 1;
+    while ptr < tokens.len() {
+        path.push(tokens[ptr].val.clone());
+        ptr+=1;
+    }
+    return Ok(Import { location, contents, path })
+}
+fn func_declar(tokens: &[Token]) -> Result<FuncDeclar, String> {
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,

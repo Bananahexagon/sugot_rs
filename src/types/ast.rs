@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::general::Location;
 #[derive(Debug, Clone)]
 pub struct FuncDeclar {
@@ -6,6 +8,19 @@ pub struct FuncDeclar {
     pub input_types: Vec<FuncArgs>,
     pub return_type: DataType,
     pub define: Block,
+}
+
+#[derive(Debug, Clone)]
+pub struct Import {
+    pub location: Location,
+    pub contents: HashSet<String>,
+    pub path: Vec<String>
+}
+
+#[derive(Debug, Clone)]
+pub enum Declars {
+    Import(Import),
+    Func(FuncDeclar)
 }
 
 #[derive(Debug, Clone)]

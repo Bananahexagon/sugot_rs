@@ -84,6 +84,14 @@ pub fn main(code: String) -> Vec<Token> {
             while current_ptr < code_len && code.chars().nth(current_ptr).unwrap() != '\n' {
                 current_ptr += 1;
             }
+        } else if c == '.'
+            && !current_token.chars().all(|c: char| {
+                matches!(c, '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9')
+            })
+        {
+            if !current_token.is_empty() {
+                push!();
+            }
         } else if match_long(
             &code[current_ptr..],
             &[

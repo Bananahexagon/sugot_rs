@@ -1,19 +1,38 @@
 use std::collections::HashMap;
 
+use super::std_types::types;
 use crate::types::ast::*;
 
-pub fn entry(asts: &[FuncDeclar]) -> Result<(), String> {
+pub fn entry(asts: &[Declars]) -> Result<(), String> {
     let mut fn_signs = HashMap::new();
     for f in asts {
-        if !fn_signs.contains_key(&f.name) {
-            fn_signs.insert(f.name.clone(), f.input_types.clone());
-        } else {
-            return Err(format!("Can't declare function twice: {:?}", f.location));
+        match f {
+            Declars::Func(f) => {
+                if !fn_signs.contains_key(&f.name) {
+                    fn_signs.insert(f.name.clone(), f.input_types.clone());
+                } else {
+                    return Err(format!("Can't declare function twice: {:?}", f.location));
+                }
+            }
+            Declars::Import(im) => {
+                println!("{:?}",im);
+                if im.path[0] == "std" {
+                    for f in im.contents.iter() {
+                        if let Some(t) = types(f) {
+                            fn_signs.insert(f.clone(), t.0);
+                        } else {
+                            return Err(format!("Function {} not found in std", f));
+                        }
+                    }
+                }
+            }
         }
     }
     let mut var_signs = vec![];
-    for f in asts {
-        dfs(&f.define, &mut fn_signs, &mut var_signs, 0, &f.return_type)?
+    for d in asts {
+        if let Declars::Func(f) = d {
+            dfs(&f.define, &mut fn_signs, &mut var_signs, 0, &f.return_type)?
+        }
     }
 
     Ok(())
@@ -57,23 +76,23 @@ fn dfs(
                 }
             }
             Statement::Return(_r) => {
-                //TODO 2021-12-23 この辺やばい
+                //TODO 2023-12-23 この辺やばい
                 if !is_match(&return_type.val, "allowed") {
                     return Err(format!("return type and expression type was different"));
                 }
             }
             Statement::VarDeclar(v) => {
-                //TODO 2021-12-23 この辺やばい
+                //TODO 2023-12-23 この辺やばい
                 if let Some(_init) = &v.init {
                     if !is_match(&v.data_type.val, "allowed") {
                         return Err(format!("initialize was failed"));
                     }
                 }
                 let l = var_signs.len();
-                var_signs[l-1].insert(v.name.clone(),v.data_type.clone());
+                var_signs[l - 1].insert(v.name.clone(), v.data_type.clone());
             }
             Statement::VarSet(v) => {
-                //TODO 2021-12-23 この辺もやばい
+                //TODO 2023-12-23 この辺もやばい
                 if let Some(i) = var_exist(var_signs, &v.name) {
                     if !is_match(&var_signs[i].get(&v.name).unwrap().val, "allowed") {
                         return Err(format!("OTT"));

@@ -9,6 +9,8 @@ mod utils;
 fn main() -> Result<(), String> {
     compile(
         r#"
+import { println } from std.io
+
 fn main() -> unit {
     var i: i32 = 0;
     while i < 100 {
