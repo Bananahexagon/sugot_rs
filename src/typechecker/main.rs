@@ -15,10 +15,16 @@ pub fn entry(asts: &[Declars]) -> Result<(), String> {
                 }
             }
             Declars::Import(im) => {
-                println!("{:?}",im);
                 if im.path[0] == "std" {
+                    let dirstr = {
+                        let mut s = String::new();
+                        for p in &im.path[1..] {
+                            s.push_str(&format!("{}.", p));
+                        }
+                        s
+                    };
                     for f in im.contents.iter() {
-                        if let Some(t) = types(f) {
+                        if let Some(t) = types(&format!("{}{}", dirstr, f)) {
                             fn_signs.insert(f.clone(), t.0);
                         } else {
                             return Err(format!("Function {} not found in std", f));

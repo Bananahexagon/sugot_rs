@@ -11,7 +11,7 @@ pub fn types(s: &str) -> Option<(Vec<FuncArgs>, String)> {
         end_column: 0,
     };
     let b = match s {
-        "println" => Some((vec![("arg_0", "string")], "void".to_string())),
+        "io.println" => Some((vec![("arg_0", "string")], "void".to_string())),
         _ => None,
     };
     if let None = b {
