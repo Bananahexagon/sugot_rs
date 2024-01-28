@@ -1,10 +1,10 @@
 use crate::types::ast::*;
 
-use super::libjs;
-
-pub fn generate(ast: Vec<Declars>) -> String {
+pub fn generate(ast: &[Declars]) -> String {
     let mut result = String::new();
-    result.push_str(libjs::io::CODE);
+    result.push_str(r#"
+const println = console.log;
+"#);
     for decl in ast {
         match decl {
             Declars::Func(func) => result.push_str(&func_decl(func)),
@@ -15,17 +15,17 @@ pub fn generate(ast: Vec<Declars>) -> String {
     result
 }
 
-fn func_decl(declar: FuncDeclar) -> String {
-    let name = declar.name;
+fn func_decl(declar: &FuncDeclar) -> String {
+    let name = &declar.name;
     let mut args = String::new();
-    for arg in declar.input_types {
+    for arg in &declar.input_types {
         args.push_str(&format!("{},", arg.name))
     }
-    let define = block(declar.define);
+    let define = block(&declar.define);
     format!("function {} ({}) {{{}}};", name, args, define)
 }
 
-fn statement(node: Statement) -> String {
+fn statement(node: &Statement) -> String {
     match node {
         Statement::Block(node) => block(node),
         Statement::Call(node) => format!("{};", call_func(node)),
@@ -37,40 +37,40 @@ fn statement(node: Statement) -> String {
     }
 }
 
-fn if_statement(node: If) -> String {
+fn if_statement(node: &If) -> String {
     if node.else_contents.is_none() {
         format!(
             "if ({}) {{{}}}",
-            expression(node.condition),
-            block(node.then_contents)
+            expression(&node.condition),
+            block(&node.then_contents)
         )
     } else {
         format!(
             "if ({}) {{{}}} else {{{}}}",
-            expression(node.condition),
-            block(node.then_contents),
-            block(node.else_contents.unwrap())
+            expression(&node.condition),
+            block(&node.then_contents),
+            block(node.else_contents.as_ref().unwrap())
         )
     }
 }
-fn while_statement(node: While) -> String {
+fn while_statement(node: &While) -> String {
     format!(
         "while ({}) {{{}}}",
-        expression(node.condition),
-        block(node.contents)
+        expression(&node.condition),
+        block(&node.contents)
     )
 }
 
-fn block(node: Block) -> String {
+fn block(node: &Block) -> String {
     let mut block = String::new();
-    for content in node.contents {
-        block.push_str(&statement(content));
+    for content in &node.contents {
+        block.push_str(&statement(&content));
     }
     block
 }
 
-fn call_func(node: CallFunc) -> String {
-    let name = node.func;
+fn call_func(node: &CallFunc) -> String {
+    let name = &node.func;
     if &name[0..1] == "!" {
         let mut i = 1;
         let mut call_type = String::new();
@@ -83,8 +83,8 @@ fn call_func(node: CallFunc) -> String {
             match &call_type[..] {
                 "op" => format!(
                     "({0} {2} {1})",
-                    expression(node.args[0].clone()),
-                    expression(node.args[1].clone()),
+                    expression(&node.args[0]),
+                    expression(&node.args[1]),
                     match rest {
                         "multi" => "*",
                         "division" => "/",
@@ -109,33 +109,33 @@ fn call_func(node: CallFunc) -> String {
         }
     } else {
         let mut args = String::new();
-        for arg in node.args {
-            args.push_str(&format!("{},", expression(arg)))
+        for arg in &node.args {
+            args.push_str(&format!("{},", expression(&arg)))
         }
         format!("{}({})", name, args)
     }
 }
 
-fn expression(node: Expression) -> String {
+fn expression(node: &Expression) -> String {
     match node {
         Expression::Call(c) => call_func(c), //TODO: 実装する 2023-10-06
         Expression::Value(v) => value(v),
     }
 }
 
-fn value(node: Value) -> String {
+fn value(node: &Value) -> String {
     match node {
-        Value::Literal(v) => v.val,
+        Value::Literal(v) => v.val.clone(),
     }
 }
 
-fn var_decl(node: VarDeclar) -> String {
+fn var_decl(node: &VarDeclar) -> String {
     if node.init.is_some() {
         format!(
             "{} {} = {};",
             if node.is_mut { "let" } else { "const" },
             node.name,
-            expression(node.init.unwrap())
+            expression(node.init.as_ref().unwrap())
         )
     } else {
         format!(
@@ -146,6 +146,6 @@ fn var_decl(node: VarDeclar) -> String {
     }
 }
 
-fn var_set(node: VarSet) -> String {
-    format!("{} = {};", node.name, expression(node.val))
+fn var_set(node: &VarSet) -> String {
+    format!("{} = {};", node.name, expression(&node.val))
 }

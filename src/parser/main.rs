@@ -9,28 +9,35 @@ pub fn main(tokens: Vec<Token>) -> Result<Vec<Declars>, String> {
     let mut stage = 0;
     let mut decl: Vec<Token> = Vec::new();
     let mut result = Vec::new();
+    let mut exporting = false;
     for token in tokens {
         if matches!(&token.val[..], "(" | "{") {
             stage += 1;
         } else if matches!(&token.val[..], ")" | "}") {
             stage -= 1;
-        } else if matches!(&token.val[..], "fn" | "import") && stage == 0 && !decl.is_empty() {
-            result.push(match &decl[0].val[..] {
-                "fn" => Declars::Func(func_declar(&decl)?),
-                "import" => Declars::Import(import_statement(&decl)?),
-                _ => return Err(format!("TODO")) //TODO 2024-01-26
-            });
+        } else if matches!(&token.val[..], "fn" | "import" | "export") && stage == 0 && !decl.is_empty() {
+            match &decl[0].val[..] {
+                "fn" => {
+                    result.push(Declars::Func(func_declar(&decl, exporting)?));
+                    exporting = false;
+                }
+                "import" => result.push(Declars::Import(import_statement(&decl)?)),
+                "export" => exporting = true,
+                _ => return Err(format!("TODO")), //TODO 2024-01-26
+            };
             decl = Vec::new();
         };
         decl.push(token);
     }
     if stage == 0 {
         if !decl.is_empty() {
-            result.push(match &decl[0].val[..] {
-                "fn" => Declars::Func(func_declar(&decl)?),
-                "import" => Declars::Import(import_statement(&decl)?),
-                _ => return Err(format!("TODO")) //TODO 2024-01-26
-            });
+            match &decl[0].val[..] {
+                "fn" => {
+                    result.push(Declars::Func(func_declar(&decl, exporting)?));
+                }
+                "import" => result.push(Declars::Import(import_statement(&decl)?)),
+                _ => return Err(format!("TODO")), //TODO 2024-01-26
+            };
         }
     } else {
         panic!();
@@ -52,8 +59,8 @@ fn import_statement(tokens: &[Token]) -> Result<Import, String> {
     assert_eq!(tokens[ptr].val, "{");
     ptr += 1;
     while tokens[ptr].val != "}" {
-        if (tokens[ptr].val != ",") == (ptr%2==1) {
-            return Err(format!("TODO")) //TODO 2024-01-26
+        if (tokens[ptr].val != ",") == (ptr % 2 == 1) {
+            return Err(format!("TODO")); //TODO 2024-01-26
         } else if tokens[ptr].val != "," {
             contents.insert(tokens[ptr].val.clone());
         }
@@ -65,11 +72,16 @@ fn import_statement(tokens: &[Token]) -> Result<Import, String> {
     ptr += 1;
     while ptr < tokens.len() {
         path.push(tokens[ptr].val.clone());
-        ptr+=1;
+        ptr += 1;
     }
-    return Ok(Import { location, contents, path })
+    return Ok(Import {
+        location,
+        contents,
+        path,
+    });
 }
-fn func_declar(tokens: &[Token]) -> Result<FuncDeclar, String> {
+
+fn func_declar(tokens: &[Token], exporting: bool) -> Result<FuncDeclar, String> {
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -87,7 +99,6 @@ fn func_declar(tokens: &[Token]) -> Result<FuncDeclar, String> {
     let mut stage = 1;
     let mut current_arg: Vec<Token> = Vec::new();
     while stage != 0 && ptr < tokens.len() {
-        println!("{:?}", tokens[ptr]);
         if matches!(&tokens[ptr].val[..], "(" | "{") {
             stage += 1;
         } else if matches!(&tokens[ptr].val[..], ")" | "}") {
@@ -140,6 +151,7 @@ fn func_declar(tokens: &[Token]) -> Result<FuncDeclar, String> {
         input_types: args, //TODO 今は入力を取らない関数だけ 2023-10-03
         return_type: data_type(return_type)?,
         define: block(&define)?,
+        exported: exporting
     })
 }
 
@@ -159,7 +171,6 @@ fn statement(tokens: &[Token]) -> Result<Statement, String> {
 }
 
 fn var_declar(tokens: &[Token]) -> Result<VarDeclar, String> {
-    println!("{:?}", tokens);
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -198,7 +209,6 @@ fn var_declar(tokens: &[Token]) -> Result<VarDeclar, String> {
 }
 
 fn var_set(tokens: &[Token]) -> Result<VarSet, String> {
-    println!("{:?}", tokens);
     let location = Location {
         start_line: tokens[0].location.start_line,
         start_column: tokens[0].location.start_column,
@@ -432,7 +442,6 @@ fn while_statement(tokens: &[Token]) -> Result<While, String> {
         contents.push(tokens[ptr].clone());
         ptr += 1;
     }
-    println!("W:{:?}", contents);
     Ok(While {
         location,
         condition: expression::parse(&condition)?,

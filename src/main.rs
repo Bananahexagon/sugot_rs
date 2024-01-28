@@ -11,7 +11,7 @@ fn main() -> Result<(), String> {
         r#"
 import { println } from std.io
 
-fn main() -> unit {
+export fn main() -> unit {
     var i: i32 = 0;
     while i < 100 {
         i = i + 1;
@@ -34,11 +34,11 @@ fn main() -> unit {
 
 fn compile(code: String) -> Result<String, String> {
     let tokens = lexer::main(code);
-    println!("{:#?}", tokens);
+    //println!("{:#?}", tokens);
     let ast = parser::main::main(tokens)?;
-    println!("{:#?}", ast);
+    //println!("{:#?}", ast);
     typechecker::main::entry(&ast)?;
-    let code = generator::javascript::main::generate(ast);
+    let code = generator::js::main::generate(&ast);
     println!("{}", code);
     Ok(code)
 }

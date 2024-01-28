@@ -13,7 +13,6 @@ pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
         Ok(Expression::Value(main::value(tokens[0].clone())?))
     } else {
         let nodes = paren(tokens);
-        println!(r#""{:?}""#, nodes);
         let parsed = binary_operation(
             nodes?,
             &[
@@ -34,7 +33,6 @@ pub fn parse(tokens: &[Token]) -> Result<Expression, String> {
                 &[("||", "or", "bool"), ("&&", "and", "bool")],
             ],
         )?;
-        println!(r#""{:?}""#, parsed);
         assert!(parsed.len() == 1);
         for token in parsed {
             if let AoT::Node(e) = token {
@@ -128,7 +126,6 @@ fn paren(tokens: &[Token]) -> Result<Vec<AoT>, String> {
             }
         }
     }
-    println!("{:?}", outer);
     Ok(outer)
 }
 
@@ -146,7 +143,6 @@ fn binary_operation(
                 for op in *ops {
                     if t.val == op.0 {
                         mode = op.1.to_string();
-                        println!("{}", op.1);
                         continue 'check_a_token;
                     }
                 }

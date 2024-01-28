@@ -8,6 +8,7 @@ pub struct FuncDeclar {
     pub input_types: Vec<FuncArgs>,
     pub return_type: DataType,
     pub define: Block,
+    pub exported: bool,
 }
 
 #[derive(Debug, Clone)]
