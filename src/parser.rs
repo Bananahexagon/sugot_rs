@@ -3,7 +3,7 @@ use crate::ast_types::*;
 peg::parser! {
 pub grammar parser() for str {
 
-rule _ = " " / "\n" / "\t" / "\r"
+rule _ =  " " / "\n" / "\t" / "\r" / "" 
 
 rule integer() -> Literal
 = n: $(['0'] / ['1'..='9']['0'..='9']*) {Literal { kind: "integer".to_string(), val: n.to_string() } }
