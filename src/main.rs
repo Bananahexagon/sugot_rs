@@ -1,4 +1,6 @@
 mod parser;
+mod ast_types;
+
 fn main() {
-    dbg!(parser::parser::calc("1").unwrap());
+    dbg!(parser::parser::string(r#""Hello, world!""#).unwrap());
 }
