@@ -16,3 +16,9 @@ pub struct Operation {
     pub left: Expression,
     pub right: Expression,
 }
+
+impl Operation {
+    pub fn into_expression(self) -> Expression {
+        Expression::Operation(Box::new(self))
+    }
+}
