@@ -5,7 +5,7 @@ pub grammar parser() for str {
 
 rule _ =  (" " / "\n" / "\t" / "\r")*
 
-rule identifier() -> String 
+rule identifier() -> String
     = s: $(!reserved() ['a'..='z' | 'A'..='Z' | '_']['0'..='9' | 'a'..='z' | 'A'..='Z' | '_']*) { s.to_string() }
 
 rule reserved() = ("true" / "false" / "let" / "if" / "else") !['0'..='9' | 'a'..='z' | 'A'..='Z' | '_']
@@ -43,7 +43,10 @@ rule call() -> Expression
     = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
 
 rule expression() -> Expression
-    = c: call() { c } / o: add_operation() { o } / l: literal() { Expression::Literal(l) }
+    = c: call() { c }
+    / o: add_operation() { o }
+    / l: literal() { Expression::Literal(l) }
+    / i: identifier() { Expression::Variable(Variable { name: i }) }
 
 rule var_declar() -> Statement
     = "let" _ n: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{name: n, val: e}) }

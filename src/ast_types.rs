@@ -8,7 +8,8 @@ pub struct Literal {
 pub enum Expression {
     Literal(Literal),
     Operation(Box<Operation>),
-    Call(Call)
+    Call(Call),
+    Variable(Variable)
 }
 
 #[derive(Debug, Clone)]
@@ -21,6 +22,11 @@ pub enum Statement {
 pub struct VarDeclar {
     pub name: String,
     pub val: Expression
+}
+
+#[derive(Debug, Clone)]
+pub struct Variable {
+    pub name: String
 }
 
 #[derive(Debug, Clone)]
