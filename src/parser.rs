@@ -42,7 +42,17 @@ rule expression_atom() -> Expression
 rule call() -> Expression
     = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
 
-pub rule expression() -> Expression
+rule expression() -> Expression
     = c: call() { c } / o: add_operation() { o } / l: literal() { Expression::Literal(l) }
+
+rule var_declar() -> Statement
+    = "let" _ n: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{name: n, val: e}) }
+
+rule statement() -> Statement
+    = e: expression() ";" { Statement::Expression(e) }
+    / d: var_declar() { d}
+
+pub rule program() -> Vec<Statement>
+    = _ p: statement() ** _ _  { p }
 }
 }

@@ -2,5 +2,9 @@ mod parser;
 mod ast_types;
 
 fn main() {
-    dbg!(parser::parser::expression(r#"println("Hello, world!")"#).unwrap());
+    dbg!(parser::parser::program(r#"
+let s = "Hello, world!";
+println("Hello, world!");
+
+"#).unwrap());
 }

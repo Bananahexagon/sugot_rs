@@ -12,6 +12,18 @@ pub enum Expression {
 }
 
 #[derive(Debug, Clone)]
+pub enum Statement {
+    Expression(Expression),
+    VarDeclar(VarDeclar)
+}
+
+#[derive(Debug, Clone)]
+pub struct VarDeclar {
+    pub name: String,
+    pub val: Expression
+}
+
+#[derive(Debug, Clone)]
 pub struct Call {
     pub name: String,
     pub args: Vec<Expression>
