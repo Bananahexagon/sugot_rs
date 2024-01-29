@@ -8,6 +8,19 @@ pub struct Literal {
 pub enum Expression {
     Literal(Literal),
     Operation(Box<Operation>),
+    Call(Call)
+}
+
+#[derive(Debug, Clone)]
+pub struct Call {
+    pub name: String,
+    pub args: Vec<Expression>
+}
+
+impl Call {
+    pub fn into_expression(self) -> Expression {
+        Expression::Call(self)
+    }
 }
 
 #[derive(Debug, Clone)]

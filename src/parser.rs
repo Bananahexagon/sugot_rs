@@ -5,6 +5,11 @@ pub grammar parser() for str {
 
 rule _ =  (" " / "\n" / "\t" / "\r")*
 
+rule identifier() -> String 
+    = s: $(!reserved() ['a'..='z' | 'A'..='Z' | '_']['0'..='9' | 'a'..='z' | 'A'..='Z' | '_']*) { s.to_string() }
+
+rule reserved() = ("true" / "false" / "let" / "if" / "else") !['0'..='9' | 'a'..='z' | 'A'..='Z' | '_']
+
 rule integer() -> Literal
     = n: $(['0'] / (['1'..='9']['0'..='9']*)) {Literal { kind: "integer".to_string(), val: n.to_string() } }
 
@@ -34,8 +39,10 @@ rule mul_operation() -> Expression
 rule expression_atom() -> Expression
     = l: literal() { Expression::Literal(l) } / "(" e: expression() ")" { e }
 
-pub rule expression() -> Expression
-    = o: add_operation() {o} / l: literal() { Expression::Literal(l) }
+rule call() -> Expression
+    = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
 
+pub rule expression() -> Expression
+    = c: call() { c } / o: add_operation() { o } / l: literal() { Expression::Literal(l) }
 }
 }
