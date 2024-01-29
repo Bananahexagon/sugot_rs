@@ -3,7 +3,7 @@ mod ast_types;
 
 fn main() {
     dbg!(parser::parser::program(r#"
-let s = "Hello, world!";
-println("{}", s);
+    s = s + 1;
+    s += 1;
 "#).unwrap());
 }

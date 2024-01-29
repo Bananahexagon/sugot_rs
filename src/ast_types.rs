@@ -15,11 +15,18 @@ pub enum Expression {
 #[derive(Debug, Clone)]
 pub enum Statement {
     Expression(Expression),
-    VarDeclar(VarDeclar)
+    VarDeclar(VarDeclar),
+    VarUpdate(VarUpdate),
 }
 
 #[derive(Debug, Clone)]
 pub struct VarDeclar {
+    pub name: String,
+    pub val: Expression
+}
+
+#[derive(Debug, Clone)]
+pub struct VarUpdate {
     pub name: String,
     pub val: Expression
 }

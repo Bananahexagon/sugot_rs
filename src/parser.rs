@@ -37,7 +37,7 @@ rule mul_operation() -> Expression
     / expression_atom()
 
 rule expression_atom() -> Expression
-    = l: literal() { Expression::Literal(l) } / "(" e: expression() ")" { e }
+    = l: literal() { Expression::Literal(l) } / i: identifier() { Expression::Variable(Variable { name: i }) } / "(" e: expression() ")" { e }
 
 rule call() -> Expression
     = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
@@ -49,11 +49,15 @@ rule expression() -> Expression
     / i: identifier() { Expression::Variable(Variable { name: i }) }
 
 rule var_declar() -> Statement
-    = "let" _ n: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{name: n, val: e}) }
+    = "let" _ n: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, val: e }) }
+
+rule var_update() -> Statement
+    = n: identifier() _ "=" _ e: expression() ";" { Statement::VarUpdate(VarUpdate{ name: n, val: e }) }
 
 rule statement() -> Statement
     = e: expression() ";" { Statement::Expression(e) }
-    / d: var_declar() { d}
+    / d: var_declar() { d }
+    / u: var_update() { u }
 
 pub rule program() -> Vec<Statement>
     = _ p: statement() ** _ _  { p }
