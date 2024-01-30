@@ -24,11 +24,18 @@ rule bool() -> Literal
 
 rule literal() -> Literal = integer() / string() / bool()
 
+rule eq_operator() -> String = s: $("==" / "!=") { match s { "==" => "eq", "!=" => "neq",_=>unreachable!() }.to_string() }
+
+rule eq_operation() -> Expression
+    = l: add_operation() _ op: eq_operator() _ r: add_operation() { Operation { kind: op ,left:l, right:r }.into_expression() }
+    / add_operation()
+
 rule add_operator() -> String = s: $("+" / "-") { match s { "+" => "add", "-" => "sub",_=>unreachable!() }.to_string() }
 
 rule add_operation() -> Expression
     = l: mul_operation() _ op: add_operator() _ r: add_operation() { Operation { kind: op ,left:l, right:r }.into_expression() }
     / mul_operation()
+
 
 rule mul_operator() -> String = s: $("*" / "/" / "%") { match s { "*" => "mul", "/" => "div_1", "%" => "div_2",_=>unreachable!() }.to_string() }
 
@@ -44,7 +51,7 @@ rule call() -> Expression
 
 rule expression() -> Expression
     = c: call() { c }
-    / o: add_operation() { o }
+    / o: eq_operation() { o }
     / l: literal() { Expression::Literal(l) }
     / i: identifier() { Expression::Variable(Variable { name: i }) }
 
