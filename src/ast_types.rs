@@ -17,6 +17,22 @@ pub enum Statement {
     Expression(Expression),
     VarDeclar(VarDeclar),
     VarUpdate(VarUpdate),
+    Block(Vec<Statement>),
+    If(If),
+    While(While)
+}
+
+#[derive(Debug, Clone)]
+pub struct While {
+    pub cond: Expression,
+    pub block: Vec<Statement>,
+}
+
+#[derive(Debug, Clone)]
+pub struct If {
+    pub then_cond: Expression,
+    pub then_block: Vec<Statement>,
+    pub else_block: Option<Vec<Statement>>
 }
 
 #[derive(Debug, Clone)]

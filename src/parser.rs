@@ -3,7 +3,7 @@ use crate::ast_types::*;
 peg::parser! {
 pub grammar parser() for str {
 
-rule _ =  (" " / "\n" / "\t" / "\r")*
+rule _ =  [' ' | '\t' | '\r' | '\n']*
 
 rule identifier() -> String
     = s: $(!reserved() ['a'..='z' | 'A'..='Z' | '_']['0'..='9' | 'a'..='z' | 'A'..='Z' | '_']*) { s.to_string() }
@@ -61,10 +61,22 @@ rule var_declar() -> Statement
 rule var_update() -> Statement
     = n: identifier() _ "=" _ e: expression() ";" { Statement::VarUpdate(VarUpdate{ name: n, val: e }) }
 
+rule block() -> Vec<Statement>
+    = "{" _ s: statement() ** _ _ "}" { s }
+
 rule statement() -> Statement
     = e: expression() ";" { Statement::Expression(e) }
     / d: var_declar() { d }
     / u: var_update() { u }
+    / b: block() { Statement::Block(b) }
+
+rule if() -> Statement
+    = "if " _ c: expression() _ b: block() _ "else" e: block() { Statement::If( If { then_cond: c, then_block: b, else_block: Some(e) } ) }
+    / "if " _ c: expression() _ b: block() _ "else" e: if() { Statement::If( If { then_cond: c, then_block: b, else_block: Some(vec![e]) } ) }
+    / "if " _ c: expression() _ b: block() { Statement::If( If { then_cond: c, then_block: b, else_block: None } ) }
+
+rule while() -> Statement
+    = "while " _ c: expression() _ b: block() { Statement::While( While { cond: c, block: b } ) }
 
 pub rule program() -> Vec<Statement>
     = _ p: statement() ** _ _  { p }
