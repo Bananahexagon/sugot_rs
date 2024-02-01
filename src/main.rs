@@ -1,9 +1,13 @@
-mod parser;
 mod ast_types;
+mod generator;
+mod parser;
 
 fn main() {
-    dbg!(parser::parser::program(r#"
+    let parsed = parser::parser::program(
+        r#"
     let s = 0;
     s = s + 1;
-"#).unwrap());
+"#,
+    ).unwrap();
+    println!("{}", generator::entry::generate(parsed).unwrap());
 }
