@@ -38,7 +38,8 @@ pub struct If {
 #[derive(Debug, Clone)]
 pub struct VarDeclar {
     pub name: String,
-    pub val: Expression
+    pub val: Expression,
+    pub data_type: String,
 }
 
 #[derive(Debug, Clone)]

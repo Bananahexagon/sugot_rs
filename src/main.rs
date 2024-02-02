@@ -5,7 +5,7 @@ mod parser;
 fn main() {
     let parsed = parser::parser::program(
         r#"
-let i = 0;
+let i: int = 0;
 while i != 100 {
     if i % 15 == 0 {
         println("FizzBuzz");

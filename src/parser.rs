@@ -56,7 +56,7 @@ rule expression() -> Expression
     / i: identifier() { Expression::Variable(Variable { name: i }) }
 
 rule var_declar() -> Statement
-    = "let" _ n: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, val: e }) }
+    = "let" _ n: identifier() _ ":" _ t: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, data_type: t, val: e }) }
 
 rule var_update() -> Statement
     = n: identifier() _ "=" _ e: expression() ";" { Statement::VarUpdate(VarUpdate{ name: n, val: e }) }
