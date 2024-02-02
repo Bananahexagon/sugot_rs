@@ -70,7 +70,7 @@ fn expression(node: Expression) -> Result<String, String> {
             Ok(format!("{}({})", c.name, args))
         }
         Expression::Literal(l) => match &l.kind[..] {
-            "string" => Ok(format!(r#""{}""#, l.val)),
+            "string" => Ok(format!("{}", l.val)),
             "integer" => Ok(format!("{}", l.val)),
             "float" => Ok(format!("{}", l.val)),
             "bool" => Ok(format!("{}", l.val)),

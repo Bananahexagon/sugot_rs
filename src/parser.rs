@@ -69,10 +69,12 @@ rule statement() -> Statement
     / d: var_declar() { d }
     / u: var_update() { u }
     / b: block() { Statement::Block(b) }
+    / w: while() { w }
+    / i: if() { i }
 
 rule if() -> Statement
-    = "if " _ c: expression() _ b: block() _ "else" e: block() { Statement::If( If { then_cond: c, then_block: b, else_block: Some(e) } ) }
-    / "if " _ c: expression() _ b: block() _ "else" e: if() { Statement::If( If { then_cond: c, then_block: b, else_block: Some(vec![e]) } ) }
+    = "if " _ c: expression() _ b: block() _ "else" _ e: block() { Statement::If( If { then_cond: c, then_block: b, else_block: Some(e) } ) }
+    / "if " _ c: expression() _ b: block() _ "else" _ e: if() { Statement::If( If { then_cond: c, then_block: b, else_block: Some(vec![e]) } ) }
     / "if " _ c: expression() _ b: block() { Statement::If( If { then_cond: c, then_block: b, else_block: None } ) }
 
 rule while() -> Statement
