@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone)]
 pub struct Literal {
     pub kind: String,
@@ -9,7 +11,14 @@ pub enum Expression {
     Literal(Literal),
     Operation(Box<Operation>),
     Call(Call),
-    Variable(Variable)
+    Variable(Variable),
+    Object((String, HashMap<String, Expression>)),
+    Prop((Box<Expression>, String)),
+}
+
+pub enum Component {
+    FnDeclar(FnDeclar),
+    RawJS(String),
 }
 
 #[derive(Debug, Clone)]
@@ -33,6 +42,14 @@ pub struct If {
     pub then_cond: Expression,
     pub then_block: Vec<Statement>,
     pub else_block: Option<Vec<Statement>>
+}
+
+#[derive(Debug, Clone)]
+pub struct FnDeclar {
+    pub name: String,
+    pub args: Vec<(String, String)>,
+    pub return_type: String,
+    pub block: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]

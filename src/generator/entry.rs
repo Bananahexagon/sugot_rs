@@ -1,11 +1,36 @@
 use crate::ast_types::*;
 
-pub fn generate(ast: Vec<Statement>) -> Result<String, String> {
+pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     let mut result = String::new();
     for a in ast {
-        result.push_str(&statement(a)?)
+        result.push_str(&match a {
+            Component::FnDeclar(f) => fn_declar(f)?,
+            Component::RawJS(c) => c,
+        })
     }
+    result.push_str("$sugot_main()");
     Ok(result)
+}
+
+fn fn_declar(node: FnDeclar) -> Result<String, String> {
+    Ok(format!(
+        "function $sugot_{} ({}) {{{}}}",
+        node.name,
+        {
+            let mut s = String::new();
+            for a in node.args {
+                s.push_str(&format!("$sugot_{},", a.0))
+            }
+            s
+        },
+        {
+            let mut s = String::new();
+            for a in node.block {
+                s.push_str(&statement(a)?)
+            }
+            s
+        }
+    ))
 }
 
 fn statement(node: Statement) -> Result<String, String> {
@@ -21,7 +46,7 @@ fn statement(node: Statement) -> Result<String, String> {
         Statement::If(i) => {
             if let Some(else_block) = i.else_block {
                 Ok(format!(
-                    "if ({}) {{{}}} else {};",
+                    "if ({}) {{{}}} else {{{}}};",
                     expression(i.then_cond)?,
                     {
                         let mut r = String::new();
@@ -48,8 +73,8 @@ fn statement(node: Statement) -> Result<String, String> {
                 }))
             }
         }
-        Statement::VarDeclar(v) => Ok(format!("let {} = {};", v.name, expression(v.val)?)),
-        Statement::VarUpdate(v) => Ok(format!("{} = {};", v.name, expression(v.val)?)),
+        Statement::VarDeclar(v) => Ok(format!("let $sugot_{} = {};", v.name, expression(v.val)?)),
+        Statement::VarUpdate(v) => Ok(format!("$sugot_{} = {};", v.name, expression(v.val)?)),
         Statement::While(q) => Ok(format!("while ({}) {{{}}};", expression(q.cond)?, {
             let mut r = String::new();
             for a in q.block {
@@ -67,7 +92,7 @@ fn expression(node: Expression) -> Result<String, String> {
             for arg in c.args {
                 args.push_str(&format!("{}, ", expression(arg)?))
             }
-            Ok(format!("{}({})", c.name, args))
+            Ok(format!("$sugot_{}({})", c.name, args))
         }
         Expression::Literal(l) => match &l.kind[..] {
             "string" => Ok(format!("{}", l.val)),
@@ -90,6 +115,14 @@ fn expression(node: Expression) -> Result<String, String> {
                 _ => Err(format!("unknown operator")),
             }
         }
-        Expression::Variable(v) => Ok(format!("{}", v.name)),
+        Expression::Variable(v) => Ok(format!("$sugot_{}", v.name)),
+        Expression::Object((_, o)) => Ok(format!("{{{}}}", {
+            let mut s = String::new();
+            for (n, e) in o {
+                s.push_str(&format!("{}: {},", n, expression(e)?))
+            }
+            s
+        })),
+        Expression::Prop((e, p)) => Ok(format!("{}.{}", expression(*e)?, p)),
     }
 }

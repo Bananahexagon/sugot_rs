@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::ast_types::*;
 
 peg::parser! {
@@ -22,6 +24,15 @@ rule string() -> Literal
 rule bool() -> Literal
     = s: $("true" / "false") {Literal { kind: "bool".to_string(), val: s.to_string() } }
 
+rule object() -> (String, HashMap<String, Expression>)
+    = n: identifier() _ "{" m: obj_member() ** (_ "," _) _ "}" {
+        let mut h = HashMap::new();
+        for (n, v) in m {
+            h.insert(n, v);
+        }
+        (n, h)
+    }
+
 rule literal() -> Literal = integer() / string() / bool()
 
 rule eq_operator() -> String = s: $("==" / "!=") { match s { "==" => "eq", "!=" => "neq",_=>unreachable!() }.to_string() }
@@ -44,16 +55,28 @@ rule mul_operation() -> Expression
     / expression_atom()
 
 rule expression_atom() -> Expression
-    = l: literal() { Expression::Literal(l) } / i: identifier() { Expression::Variable(Variable { name: i }) } / "(" e: expression() ")" { e }
+    = l: literal() { Expression::Literal(l) } 
+    / i: identifier() { Expression::Variable(Variable { name: i }) } 
+    / "(" e: expression() ")" { e }
 
 rule call() -> Expression
     = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
+    / o: expression_atom() _ "." i: identifier() "(" a: expression() ** (_ "," _) ")" { 
+        let mut b = Vec::new();
+        b.push(o);
+        for a in a {
+            b.push(a)
+        }
+        Call { name: i, args: b }.into_expression()
+    }
 
 rule expression() -> Expression
     = c: call() { c }
     / o: eq_operation() { o }
     / l: literal() { Expression::Literal(l) }
     / i: identifier() { Expression::Variable(Variable { name: i }) }
+    / o: object() { Expression::Object(o) }
+    / o: expression_atom() _ "." p: identifier() { Expression::Prop((Box::new(o), p)) }
 
 rule var_declar() -> Statement
     = "let" _ n: identifier() _ ":" _ t: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, data_type: t, val: e }) }
@@ -80,7 +103,21 @@ rule if() -> Statement
 rule while() -> Statement
     = "while " _ c: expression() _ b: block() { Statement::While( While { cond: c, block: b } ) }
 
-pub rule program() -> Vec<Statement>
-    = _ p: statement() ** _ _  { p }
+rule fn_declar() -> FnDeclar
+    = "fn " _ n: identifier() _ "(" _ a: fn_type() ** (_ "," _) _ ")" _ ":" _ r: identifier() _ b: block()
+    { FnDeclar { name: n, args: a, return_type: r, block: b } }
+
+rule fn_type() -> (String, String)
+    = n: identifier() _ ":" _ t: identifier() {( n, t )}
+
+rule obj_member() -> (String, Expression)
+    = n: identifier() _ ":" _ t: expression() {( n, t )}
+
+rule component() -> Component
+    = f: fn_declar() { Component::FnDeclar(f) }
+    / c: "#raw_js(" s: $((!")#" [_])*) ")#" { Component::RawJS(s.to_string()) }
+
+pub rule program() -> Vec<Component>
+    = _ c: component() ** _ _  { c }
 }
 }
