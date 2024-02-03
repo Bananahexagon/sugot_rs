@@ -13,7 +13,7 @@ rule identifier() -> String
 rule reserved() = ("true" / "false" / "let" / "if" / "else") !['0'..='9' | 'a'..='z' | 'A'..='Z' | '_']
 
 rule integer() -> Literal
-    = n: $(['0'] / (['1'..='9']['0'..='9']*)) {Literal { kind: "integer".to_string(), val: n.to_string() } }
+    = n: $(['0'] / (['1'..='9']['0'..='9']*)) {Literal { kind: "int".to_string(), val: n.to_string() } }
 
 rule float() -> Literal
 = n: $(['0'] / ['1'..='9']['0'..='9']*"."['0'..='9']) {Literal { kind: "float".to_string(), val: n.to_string() } }

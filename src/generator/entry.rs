@@ -1,4 +1,4 @@
-use crate::ast_types::*;
+use crate::t_ir::ast_types::*;
 
 pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     let mut result = String::new();
@@ -86,8 +86,8 @@ fn statement(node: Statement) -> Result<String, String> {
     }
 }
 
-fn expression(node: Expression) -> Result<String, String> {
-    match node {
+fn expression(node: TypedExpression) -> Result<String, String> {
+    match node.val {
         Expression::Call(c) => {
             let mut args = String::new();
             for arg in c.args {
@@ -97,7 +97,7 @@ fn expression(node: Expression) -> Result<String, String> {
         }
         Expression::Literal(l) => match &l.kind[..] {
             "string" => Ok(format!("{}", l.val)),
-            "integer" => Ok(format!("{}", l.val)),
+            "int" => Ok(format!("{}", l.val)),
             "float" => Ok(format!("{}", l.val)),
             "bool" => Ok(format!("{}", l.val)),
             _ => Err(format!("unknown literal")),

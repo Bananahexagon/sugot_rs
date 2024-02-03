@@ -5,6 +5,7 @@ mod ast_types;
 mod generator;
 mod parser;
 mod json;
+mod t_ir;
 
 fn main() {
     let option = fs::read_to_string("./examples/project.json").unwrap_or_else(|op| {
@@ -18,7 +19,8 @@ fn main() {
         String::new()
     });
     let parsed = parser::parser::program(&code).unwrap();
-    let result = generator::entry::generate(parsed);
+    let typed = t_ir::add_type::generate(parsed).unwrap();
+    let result = generator::entry::generate(typed);
     let o_dir = config.obj().unwrap().get("outdir").unwrap().str().unwrap();
     if let Ok(c) = result {
         let mut file = fs::OpenOptions::new()

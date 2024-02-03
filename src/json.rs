@@ -51,6 +51,7 @@ pub enum Value {
     Arr(Vec<Value>),
 }
 
+#[allow(unused)]
 impl Value {
     pub fn int(&self) -> Option<&u32> {
         if let Value::Int(i) = self {
