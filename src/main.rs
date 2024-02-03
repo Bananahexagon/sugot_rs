@@ -1,31 +1,35 @@
+use std::fs;
+use std::io::Write;
+
 mod ast_types;
 mod generator;
 mod parser;
+mod json;
 
 fn main() {
-    let parsed = parser::parser::program(
-        r#"
-#raw_js(
-    const $sugot_println = console.log;
-)#
-
-fn main(): void {
-    let i: int = 0;
-    while i != 100 { i.fizz_buzz(); i = i + 1; }
-}
-
-fn fizz_buzz(i: int): void {
-    if i % 15 == 0 {
-        println("FizzBuzz");
-    } else if i % 3 == 0 {
-        println("Fizz");
-    } else if i % 3 == 0 {
-        println("Buzz");
-    } else {
-        println(i);
-    }
-}
-"#,
-    ).unwrap();
-    println!("{}", generator::entry::generate(parsed).unwrap());
+    let option = fs::read_to_string("./examples/project.json").unwrap_or_else(|op| {
+        eprintln!("Error: {:?}", op);
+        String::new()
+    });
+    let config = json::parser::json(&option).unwrap();
+    let c_dir = config.obj().unwrap().get("entry").unwrap().str().unwrap();
+    let code = fs::read_to_string(c_dir).unwrap_or_else(|op| {
+        eprintln!("Error: {:?}", op);
+        String::new()
+    });
+    let parsed = parser::parser::program(&code).unwrap();
+    let result = generator::entry::generate(parsed);
+    let o_dir = config.obj().unwrap().get("outdir").unwrap().str().unwrap();
+    if let Ok(c) = result {
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .create(true)
+            .open(o_dir)
+            .unwrap();
+        file.write_all(c.as_bytes()).unwrap();
+    } else if let Err(e) = result {
+        eprintln!("{}", e);
+        return;
+    };
 }

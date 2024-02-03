@@ -2,6 +2,7 @@ use crate::ast_types::*;
 
 pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     let mut result = String::new();
+    result.push_str("\"use strict\"\n");
     for a in ast {
         result.push_str(&match a {
             Component::FnDeclar(f) => fn_declar(f)?,
