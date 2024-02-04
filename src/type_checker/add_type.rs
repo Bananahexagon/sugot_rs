@@ -114,19 +114,41 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
             }),
             data_type: ctx.get_var(&v.name).unwrap().clone(),
         },
-        AST::Expression::Call(c) => TIR::TypedExpression {
-            val: TIR::Expression::Call(TIR::Call {
-                name: c.name.clone(),
-                args: {
-                    let mut v = Vec::new();
-                    for arg in c.args {
-                        v.push(expression(ctx, arg)?)
-                    }
-                    v
-                },
-            }),
-            data_type: TIR::DataType::Name(ctx.fns.get(&c.name).unwrap().return_type.clone()),
-        },
+        AST::Expression::Call(c) => {
+            if let Some(fn_s) = ctx.clone_fn(&c.name) {
+                TIR::TypedExpression {
+                    val: TIR::Expression::Call(TIR::Call {
+                        name: c.name.clone(),
+                        args: {
+                            let mut v = Vec::new();
+                            if c.args.len() != ctx.fns.get(&c.name).unwrap().args.len() {
+                                return Err(format!("unmached args: {}", c.name));
+                            }
+                            for (i, arg) in c.args.into_iter().enumerate() {
+                                let e = expression(ctx, arg)?;
+                                if fn_s.args[i].1
+                                    != (if let TIR::DataType::Name(n) = e.data_type.clone() {
+                                        n
+                                    } else {
+                                        unimplemented!()
+                                    })
+                                {
+                                    return Err(format!(
+                                        "unmached arg: {:?} {:?}",
+                                        fn_s.args[i].1, e.data_type
+                                    ));
+                                }
+                                v.push(e)
+                            }
+                            v
+                        },
+                    }),
+                    data_type: TIR::DataType::Name(fn_s.return_type),
+                }
+            } else {
+                return Err(format!("unknown function: {}", &c.name));
+            }
+        }
         AST::Expression::Object((n, b)) => {
             let mut m = HashMap::new();
             let mut t = HashMap::new();
@@ -196,6 +218,13 @@ struct Context {
 }
 
 impl Context {
+    fn clone_fn(&self, n: &str) -> Option<AST::FnSignature> {
+        if let Some(f) = self.fns.get(n) {
+            Some(f.clone())
+        } else {
+            None
+        }
+    }
     fn get_var(&self, n: &str) -> Option<&TIR::DataType> {
         for v in self.vars.iter().rev() {
             if v.contains_key(n) {

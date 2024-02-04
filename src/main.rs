@@ -3,9 +3,9 @@ use std::io::Write;
 
 mod ast_types;
 mod generator;
-mod parser;
 mod json;
-mod typechecker;
+mod parser;
+mod type_checker;
 
 fn main() {
     let option = fs::read_to_string("./examples/project.json").unwrap_or_else(|op| {
@@ -19,7 +19,11 @@ fn main() {
         String::new()
     });
     let parsed = parser::parser::program(&code).unwrap();
-    let typed = typechecker::add_type::translate(parsed).unwrap();
+    let typed = type_checker::add_type::translate(parsed).unwrap();
+    //if let Err(s) = type_checker::checker::main(typed.clone()) {
+    //    eprintln!("{}", s);
+    //    return;
+    //}
     let result = generator::entry::generate(typed);
     let o_dir = config.obj().unwrap().get("outdir").unwrap().str().unwrap();
     if let Ok(c) = result {

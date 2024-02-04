@@ -1,4 +1,4 @@
-use crate::typechecker::ast_types::*;
+use crate::type_checker::ast_types::*;
 
 pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     let mut result = String::new();
