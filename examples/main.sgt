@@ -17,6 +17,6 @@ fn fizz_buzz(i: int): void {
     } else if i % 5 == 0 {
         println("Buzz");
     } else {
-        println(i);
+        println(i as string);
     }
 }

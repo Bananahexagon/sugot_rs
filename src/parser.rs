@@ -61,7 +61,7 @@ rule expression_atom() -> Expression
 
 rule call() -> Expression
     = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
-    / o: expression_atom() _ "." i: identifier() "(" a: expression() ** (_ "," _) ")" { 
+    / o: expression_atom() "." i: identifier() "(" a: expression() ** (_ "," _) ")" { 
         let mut b = Vec::new();
         b.push(o);
         for a in a {
@@ -72,11 +72,11 @@ rule call() -> Expression
 
 rule expression() -> Expression
     = c: call() { c }
+    / e: expression_atom() " " _ "as " _  t: identifier() { Expression::Cast((Box::new(e), t)) }
     / o: eq_operation() { o }
-    / l: literal() { Expression::Literal(l) }
-    / i: identifier() { Expression::Variable(Variable { name: i }) }
     / o: object() { Expression::Object(o) }
-    / o: expression_atom() _ "." p: identifier() { Expression::Prop((Box::new(o), p)) }
+    / o: expression_atom() "." p: identifier() { Expression::Prop((Box::new(o), p)) }
+    / a: expression_atom() { a }
 
 rule var_declar() -> Statement
     = "let" _ n: identifier() _ ":" _ t: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, data_type: t, val: e }) }

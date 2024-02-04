@@ -210,6 +210,10 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                 },
             }
         }
+        AST::Expression::Cast((e, t)) => TIR::TypedExpression {
+            val: TIR::Expression::Cast((Box::new(expression(ctx, *e)?), t.clone())),
+            data_type: TIR::DataType::Name(t),
+        },
     })
 }
 struct Context {

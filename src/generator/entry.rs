@@ -126,5 +126,6 @@ fn expression(node: TypedExpression) -> Result<String, String> {
             s
         })),
         Expression::Prop((e, p)) => Ok(format!("{}.{}", expression(*e)?, p)),
+        Expression::Cast((e, _)) => Ok(format!("{}", expression(*e)?)),
     }
 }

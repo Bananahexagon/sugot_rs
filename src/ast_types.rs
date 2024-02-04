@@ -14,6 +14,7 @@ pub enum Expression {
     Variable(Variable),
     Object((String, HashMap<String, Expression>)),
     Prop((Box<Expression>, String)),
+    Cast((Box<Expression>, String))
 }
 
 pub enum Component {
