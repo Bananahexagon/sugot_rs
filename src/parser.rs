@@ -72,14 +72,24 @@ rule call() -> Expression
 
 rule expression() -> Expression
     = c: call() { c }
-    / e: expression_atom() " " _ "as " _  t: identifier() { Expression::Cast((Box::new(e), t)) }
+    / e: expression_atom() " " _ "as " _  t: data_type() { Expression::Cast((Box::new(e), t)) }
     / o: eq_operation() { o }
     / o: object() { Expression::Object(o) }
     / o: expression_atom() "." p: identifier() { Expression::Prop((Box::new(o), p)) }
     / a: expression_atom() { a }
 
+rule data_type() -> DataType
+    = n: identifier() { DataType::Name(n) }
+    / n: identifier() _ "{" m: type_member() ** (_ "," _) _ "}" {
+        let mut h = HashMap::new();
+        for (n, v) in m {
+            h.insert(n, v);
+        }
+        DataType::Object(h)
+    }
+
 rule var_declar() -> Statement
-    = "let" _ n: identifier() _ ":" _ t: identifier() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, data_type: t, val: e }) }
+    = "let" _ n: identifier() _ ":" _ t: data_type() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, data_type: t, val: e }) }
 
 rule var_update() -> Statement
     = n: identifier() _ "=" _ e: expression() ";" { Statement::VarUpdate(VarUpdate{ name: n, val: e }) }
@@ -104,18 +114,20 @@ rule while() -> Statement
     = "while " _ c: expression() _ b: block() { Statement::While( While { cond: c, block: b } ) }
 
 rule fn_declar() -> FnDeclar
-    = "fn " _ n: identifier() _ "(" _ a: fn_type() ** (_ "," _) _ ")" _ ":" _ r: identifier() _ b: block()
+    = "fn " _ n: identifier() _ "(" _ a: fn_type() ** (_ "," _) _ ")" _ ":" _ r: data_type() _ b: block()
     { FnDeclar { name: n, args: a, return_type: r, block: b } }
 
-rule fn_type() -> (String, String)
-    = n: identifier() _ ":" _ t: identifier() {( n, t )}
-
+rule fn_type() -> (String, DataType)
+    = n: identifier() _ ":" _ t: data_type() {( n, t )}
 
 rule fn_extern() -> FnSignature
-    = "extern fn " _ n: identifier() _ "(" _ a: fn_type() ** (_ "," _) _ ")" _ ":" _ r: identifier() { FnSignature { name: n, args: a, return_type: r } }
+    = "extern fn " _ n: identifier() _ "(" _ a: fn_type() ** (_ "," _) _ ")" _ ":" _ r: data_type() { FnSignature { name: n, args: a, return_type: r } }
 
 rule obj_member() -> (String, Expression)
     = n: identifier() _ ":" _ t: expression() {( n, t )}
+
+rule type_member() -> (String, DataType)
+    = n: identifier() _ ":" _ t: data_type() {( n, t )}
 
 rule component() -> Component
     = f: fn_declar() { Component::FnDeclar(f) }

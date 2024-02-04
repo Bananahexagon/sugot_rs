@@ -14,7 +14,13 @@ pub enum Expression {
     Variable(Variable),
     Object((String, HashMap<String, Expression>)),
     Prop((Box<Expression>, String)),
-    Cast((Box<Expression>, String))
+    Cast((Box<Expression>, DataType))
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DataType {
+    Name(String),
+    Object(HashMap<String,DataType>)
 }
 
 pub enum Component {
@@ -49,23 +55,23 @@ pub struct If {
 #[derive(Debug, Clone)]
 pub struct FnDeclar {
     pub name: String,
-    pub args: Vec<(String, String)>,
-    pub return_type: String,
+    pub args: Vec<(String, DataType)>,
+    pub return_type: DataType,
     pub block: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]
 pub struct FnSignature {
     pub name: String,
-    pub args: Vec<(String, String)>,
-    pub return_type: String,
+    pub args: Vec<(String, DataType)>,
+    pub return_type: DataType,
 }
 
 #[derive(Debug, Clone)]
 pub struct VarDeclar {
     pub name: String,
     pub val: Expression,
-    pub data_type: String,
+    pub data_type: DataType,
 }
 
 #[derive(Debug, Clone)]

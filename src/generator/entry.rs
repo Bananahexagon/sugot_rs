@@ -1,4 +1,4 @@
-use crate::type_checker::ast_types::*;
+use crate::{ast_types::DataType, type_checker::ast_types::*};
 
 pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     let mut result = String::new();
@@ -105,16 +105,32 @@ fn expression(node: TypedExpression) -> Result<String, String> {
         },
         Expression::Operation(o) => {
             let o = *o;
+            let (lt, rt) = (o.left.data_type.clone(), o.right.data_type.clone());
             let (l, r) = (expression(o.left)?, expression(o.right)?);
-            match &o.kind[..] {
-                "add" => Ok(format!("({} + {})", l, r)),
-                "sub" => Ok(format!("({} - {})", l, r)),
-                "mul" => Ok(format!("({} * {})", l, r)),
-                "div_1" => Ok(format!("({} / {})", l, r)),
-                "div_2" => Ok(format!("({} % {})", l, r)),
-                "eq" => Ok(format!("({} === {})", l, r)),
-                "neq" => Ok(format!("({} !== {})", l, r)),
-                _ => Err(format!("unknown operator")),
+            if let (DataType::Name(lt), DataType::Name(rt)) = (lt, rt) {
+                match (&o.kind[..], &lt[..], &rt[..]) {
+                    ("add", "int", "int") => Ok(format!("({} + {})", l, r)),
+                    ("sub", "int", "int") => Ok(format!("({} - {})", l, r)),
+                    ("mul", "int", "int") => Ok(format!("({} * {})", l, r)),
+                    ("div_1", "int", "int") => Ok(format!("Math.floor({} / {})", l, r)),
+                    ("div_2", "int", "int") => Ok(format!(
+                        "((l, r) => {{ let t = l % r; if (t < 0) t += r; return r; }})({}, {})",
+                        l, r
+                    )),
+                    ("add", "float", "float") => Ok(format!("({} + {})", l, r)),
+                    ("sub", "float", "float") => Ok(format!("({} - {})", l, r)),
+                    ("mul", "float", "float") => Ok(format!("({} * {})", l, r)),
+                    ("div_1", "float", "float") => Ok(format!("({} / {})", l, r)),
+                    ("div_2", "float", "float") => Ok(format!("({} % {})", l, r)),
+                    ("neq", l, r) if l == r => Ok(format!("({} === {})", l, r)),
+                    ("eq", l, r) if l == r => Ok(format!("({} !== {})", l, r)),
+                    _ => {
+                        println!("{:?}", (&o.kind[..], &lt, &rt));
+                        Err(format!("unknown operator"))
+                    }
+                }
+            } else {
+                unimplemented!()
             }
         }
         Expression::Variable(v) => Ok(format!("$sugot_{}", v.name)),
@@ -126,6 +142,12 @@ fn expression(node: TypedExpression) -> Result<String, String> {
             s
         })),
         Expression::Prop((e, p)) => Ok(format!("{}.{}", expression(*e)?, p)),
-        Expression::Cast((e, _)) => Ok(format!("{}", expression(*e)?)),
+        Expression::Cast((e, t)) => Ok(match t {
+            DataType::Name(s) => match &s[..] {
+                "string" => format!("`${{{}}}`", expression(*e)?),
+                _ => format!("{}", expression(*e)?),
+            },
+            _ => format!("{}", expression(*e)?),
+        }),
     }
 }

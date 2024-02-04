@@ -46,7 +46,7 @@ fn fn_declar(ctx: &mut Context, node: AST::FnDeclar) -> Result<TIR::FnDeclar, St
     ctx.vars.push({
         let mut hm = HashMap::new();
         for (k, v) in node.args.clone() {
-            hm.insert(k, TIR::DataType::Name(v));
+            hm.insert(k, v);
         }
         hm
     });
@@ -85,7 +85,7 @@ fn block(ctx: &mut Context, node: Vec<AST::Statement>) -> Result<Vec<TIR::Statem
             }),
             AST::Statement::VarDeclar(v) => {
                 let l = ctx.vars.len() - 1;
-                ctx.vars[l].insert(v.name.clone(), TIR::DataType::Name(v.data_type.clone()));
+                ctx.vars[l].insert(v.name.clone(), v.data_type.clone());
                 TIR::Statement::VarDeclar(TIR::VarDeclar {
                     name: v.name,
                     val: expression(ctx, v.val)?,
@@ -106,7 +106,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                 kind: l.kind.clone(),
                 val: l.val,
             }),
-            data_type: TIR::DataType::Name(l.kind),
+            data_type: AST::DataType::Name(l.kind),
         },
         AST::Expression::Variable(v) => TIR::TypedExpression {
             val: TIR::Expression::Variable(TIR::Variable {
@@ -122,19 +122,14 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                         args: {
                             let mut v = Vec::new();
                             if c.args.len() != ctx.fns.get(&c.name).unwrap().args.len() {
-                                return Err(format!("unmached args: {}", c.name));
+                                return Err(format!("unmatched args: {}", c.name));
                             }
                             for (i, arg) in c.args.into_iter().enumerate() {
                                 let e = expression(ctx, arg)?;
-                                if fn_s.args[i].1
-                                    != (if let TIR::DataType::Name(n) = e.data_type.clone() {
-                                        n
-                                    } else {
-                                        unimplemented!()
-                                    })
+                                if fn_s.args[i].1 != e.data_type
                                 {
                                     return Err(format!(
-                                        "unmached arg: {:?} {:?}",
+                                        "unmatched arg: {:?} {:?}",
                                         fn_s.args[i].1, e.data_type
                                     ));
                                 }
@@ -143,7 +138,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                             v
                         },
                     }),
-                    data_type: TIR::DataType::Name(fn_s.return_type),
+                    data_type: fn_s.return_type,
                 }
             } else {
                 return Err(format!("unknown function: {}", &c.name));
@@ -159,12 +154,12 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
             }
             TIR::TypedExpression {
                 val: TIR::Expression::Object((n, m)),
-                data_type: TIR::DataType::Object(t),
+                data_type: AST::DataType::Object(t),
             }
         }
         AST::Expression::Prop((e, a)) => {
             let te = expression(ctx, *e)?;
-            let t = if let TIR::DataType::Object(s) = te.data_type.clone() {
+            let t = if let AST::DataType::Object(s) = te.data_type.clone() {
                 if let Some(t) = s.get(&a) {
                     t.clone()
                 } else {
@@ -188,20 +183,20 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                     right,
                 })),
                 data_type: {
-                    if let (TIR::DataType::Name(l), TIR::DataType::Name(r)) = (left_d, right_d) {
+                    if let (AST::DataType::Name(l), AST::DataType::Name(r)) = (left_d, right_d) {
                         match (&o.kind[..], &l[..], &r[..]) {
-                            ("add", "int", "int") => TIR::DataType::Name("int".to_string()),
-                            ("sub", "int", "int") => TIR::DataType::Name("int".to_string()),
-                            ("mul", "int", "int") => TIR::DataType::Name("int".to_string()),
-                            ("div_1", "int", "int") => TIR::DataType::Name("int".to_string()),
-                            ("div_2", "int", "int") => TIR::DataType::Name("int".to_string()),
-                            ("add", "float", "float") => TIR::DataType::Name("float".to_string()),
-                            ("sub", "float", "float") => TIR::DataType::Name("float".to_string()),
-                            ("mul", "float", "float") => TIR::DataType::Name("float".to_string()),
-                            ("div_1", "float", "float") => TIR::DataType::Name("float".to_string()),
-                            ("div_2", "float", "float") => TIR::DataType::Name("float".to_string()),
-                            ("neq", l, r) if l == r => TIR::DataType::Name("bool".to_string()),
-                            ("eq", l, r) if l == r => TIR::DataType::Name("bool".to_string()),
+                            ("add", "int", "int")                  =>   AST::DataType::Name("int".to_string()),
+                            ("sub", "int", "int")                  =>   AST::DataType::Name("int".to_string()),
+                            ("mul", "int", "int")                    => AST::DataType::Name("int".to_string()),
+                            ("div_1", "int", "int")                =>   AST::DataType::Name("int".to_string()),
+                            ("div_2", "int", "int")                =>   AST::DataType::Name("int".to_string()),
+                            ("add", "float", "float")              =>   AST::DataType::Name("float".to_string()),
+                            ("sub", "float", "float")              =>   AST::DataType::Name("float".to_string()),
+                            ("mul", "float", "float")              =>   AST::DataType::Name("float".to_string()),
+                            ("div_1", "float", "float")             =>  AST::DataType::Name("float".to_string()),
+                            ("div_2", "float", "float")             =>  AST::DataType::Name("float".to_string()),
+                            ("neq", l, r)  if l == r    =>  AST::DataType::Name("bool".to_string()),
+                            ("eq", l, r)   if l == r   =>   AST::DataType::Name("bool".to_string()),
                             _ => unimplemented!("{} {} {}", &o.kind[..], &l[..], &r[..]),
                         }
                     } else {
@@ -212,13 +207,13 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
         }
         AST::Expression::Cast((e, t)) => TIR::TypedExpression {
             val: TIR::Expression::Cast((Box::new(expression(ctx, *e)?), t.clone())),
-            data_type: TIR::DataType::Name(t),
+            data_type: t,
         },
     })
 }
 struct Context {
     fns: HashMap<String, AST::FnSignature>,
-    vars: Vec<HashMap<String, TIR::DataType>>,
+    vars: Vec<HashMap<String, AST::DataType>>,
 }
 
 impl Context {
@@ -229,7 +224,7 @@ impl Context {
             None
         }
     }
-    fn get_var(&self, n: &str) -> Option<&TIR::DataType> {
+    fn get_var(&self, n: &str) -> Option<&AST::DataType> {
         for v in self.vars.iter().rev() {
             if v.contains_key(n) {
                 return Some(v.get(n).unwrap());

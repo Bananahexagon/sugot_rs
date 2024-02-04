@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::ast_types::DataType;
 
 #[derive(Debug, Clone)]
 pub struct Literal {
@@ -14,19 +15,13 @@ pub enum Expression {
     Variable(Variable),
     Object((String, HashMap<String, TypedExpression>)),
     Prop((Box<TypedExpression>, String)),
-    Cast((Box<TypedExpression>, String))
+    Cast((Box<TypedExpression>, DataType))
 }
 
 #[derive(Debug, Clone)]
 pub struct TypedExpression {
     pub val: Expression,
     pub data_type: DataType,
-}
-
-#[derive(Debug, Clone)]
-pub enum DataType {
-    Name(String),
-    Object(HashMap<String,DataType>)
 }
 
 #[derive(Debug, Clone)]
@@ -62,23 +57,23 @@ pub struct If {
 #[derive(Debug, Clone)]
 pub struct FnDeclar {
     pub name: String,
-    pub args: Vec<(String, String)>,
-    pub return_type: String,
+    pub args: Vec<(String, DataType)>,
+    pub return_type: DataType,
     pub block: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]
 pub struct FnSignature {
     pub name: String,
-    pub args: Vec<(String, String)>,
-    pub return_type: String,
+    pub args: Vec<(String, DataType)>,
+    pub return_type: DataType,
 }
 
 #[derive(Debug, Clone)]
 pub struct VarDeclar {
     pub name: String,
     pub val: TypedExpression,
-    pub data_type: String,
+    pub data_type: DataType,
 }
 
 #[derive(Debug, Clone)]
