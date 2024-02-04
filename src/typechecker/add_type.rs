@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::ast_types as TIR;
 use crate::ast_types as AST;
 
-pub fn generate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String> {
+pub fn translate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String> {
     let mut r = Vec::new();
     let mut ctx = Context {
         fns: HashMap::new(),
@@ -12,7 +12,18 @@ pub fn generate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String>
     for a in &ast {
         match a {
             AST::Component::FnDeclar(f) => {
-                ctx.fns.insert(f.name.clone(), f.clone());
+                ctx.fns.insert(
+                    f.name.clone(),
+                    AST::FnSignature {
+                        name: f.name.clone(),
+                        args: f.args.clone(),
+                        return_type: f.return_type.clone(),
+                    },
+                );
+            }
+
+            AST::Component::FnSignature(e) => {
+                ctx.fns.insert(e.name.clone(), e.clone());
             }
             _ => (),
         }
@@ -21,6 +32,11 @@ pub fn generate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String>
         r.push(match a {
             AST::Component::FnDeclar(f) => TIR::Component::FnDeclar(fn_declar(&mut ctx, f)?),
             AST::Component::RawJS(c) => TIR::Component::RawJS(c),
+            AST::Component::FnSignature(e) => TIR::Component::FnSignature(TIR::FnSignature {
+                name: e.name,
+                args: e.args,
+                return_type: e.return_type,
+            }),
         })
     }
     Ok(r)
@@ -47,7 +63,6 @@ fn fn_declar(ctx: &mut Context, node: AST::FnDeclar) -> Result<TIR::FnDeclar, St
 fn block(ctx: &mut Context, node: Vec<AST::Statement>) -> Result<Vec<TIR::Statement>, String> {
     let mut r = Vec::new();
     ctx.vars.push(HashMap::new());
-    println!("{:?}", ctx.vars);
     for s in node {
         r.push(match s {
             AST::Statement::While(w) => TIR::Statement::While(TIR::While {
@@ -81,7 +96,6 @@ fn block(ctx: &mut Context, node: Vec<AST::Statement>) -> Result<Vec<TIR::Statem
         });
     }
     ctx.vars.pop();
-    println!("{:?}", ctx.vars);
     Ok(r)
 }
 
@@ -145,7 +159,6 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
         AST::Expression::Operation(o) => {
             let (left, right) = (expression(ctx, o.left)?, expression(ctx, o.right)?);
             let (left_d, right_d) = (left.data_type.clone(), right.data_type.clone());
-            println!("{:?} {:?}", left, right);
             TIR::TypedExpression {
                 val: TIR::Expression::Operation(Box::new(TIR::Operation {
                     kind: o.kind.clone(),
@@ -178,7 +191,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
     })
 }
 struct Context {
-    fns: HashMap<String, AST::FnDeclar>,
+    fns: HashMap<String, AST::FnSignature>,
     vars: Vec<HashMap<String, TIR::DataType>>,
 }
 

@@ -110,12 +110,17 @@ rule fn_declar() -> FnDeclar
 rule fn_type() -> (String, String)
     = n: identifier() _ ":" _ t: identifier() {( n, t )}
 
+
+rule fn_extern() -> FnSignature
+    = "extern fn " _ n: identifier() _ "(" _ a: fn_type() ** (_ "," _) _ ")" _ ":" _ r: identifier() { FnSignature { name: n, args: a, return_type: r } }
+
 rule obj_member() -> (String, Expression)
     = n: identifier() _ ":" _ t: expression() {( n, t )}
 
 rule component() -> Component
     = f: fn_declar() { Component::FnDeclar(f) }
     / c: "#raw_js(" s: $((!")#" [_])*) ")#" { Component::RawJS(s.to_string()) }
+    / e: fn_extern() { Component::FnSignature(e) }
 
 pub rule program() -> Vec<Component>
     = _ c: component() ** _ _  { c }

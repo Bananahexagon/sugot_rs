@@ -5,7 +5,7 @@ mod ast_types;
 mod generator;
 mod parser;
 mod json;
-mod t_ir;
+mod typechecker;
 
 fn main() {
     let option = fs::read_to_string("./examples/project.json").unwrap_or_else(|op| {
@@ -19,7 +19,7 @@ fn main() {
         String::new()
     });
     let parsed = parser::parser::program(&code).unwrap();
-    let typed = t_ir::add_type::generate(parsed).unwrap();
+    let typed = typechecker::add_type::translate(parsed).unwrap();
     let result = generator::entry::generate(typed);
     let o_dir = config.obj().unwrap().get("outdir").unwrap().str().unwrap();
     if let Ok(c) = result {

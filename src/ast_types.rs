@@ -19,6 +19,7 @@ pub enum Expression {
 pub enum Component {
     FnDeclar(FnDeclar),
     RawJS(String),
+    FnSignature(FnSignature)
 }
 
 #[derive(Debug, Clone)]
@@ -50,6 +51,13 @@ pub struct FnDeclar {
     pub args: Vec<(String, String)>,
     pub return_type: String,
     pub block: Vec<Statement>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FnSignature {
+    pub name: String,
+    pub args: Vec<(String, String)>,
+    pub return_type: String,
 }
 
 #[derive(Debug, Clone)]

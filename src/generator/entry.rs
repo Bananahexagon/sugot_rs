@@ -1,4 +1,4 @@
-use crate::t_ir::ast_types::*;
+use crate::typechecker::ast_types::*;
 
 pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     let mut result = String::new();
@@ -7,6 +7,7 @@ pub fn generate(ast: Vec<Component>) -> Result<String, String> {
         result.push_str(&match a {
             Component::FnDeclar(f) => fn_declar(f)?,
             Component::RawJS(c) => c,
+            Component::FnSignature(_) => "".to_string(),
         })
     }
     result.push_str("$sugot_main()");
