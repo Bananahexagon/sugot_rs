@@ -74,8 +74,9 @@ rule expression() -> Expression
     = c: call() { c }
     / e: expression_atom() " " _ "as " _  t: data_type() { Expression::Cast((Box::new(e), t)) }
     / o: eq_operation() { o }
-    / o: object() { Expression::Object(o) }
-    / o: expression_atom() "." p: identifier() { Expression::Prop((Box::new(o), p)) }
+    // o: object() { Expression::Object(o) }
+    // o: expression_atom() "." p: identifier() { Expression::Prop((Box::new(o), p)) }
+    / a: expression_atom() _ "[" _ i: expression() _ "]" { Expression::Index((Box::new(a), Box::new(i))) }
     / a: expression_atom() { a }
 
 rule data_type() -> DataType

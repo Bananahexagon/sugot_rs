@@ -149,5 +149,6 @@ fn expression(node: TypedExpression) -> Result<String, String> {
             },
             _ => format!("{}", expression(*e)?),
         }),
+        Expression::Index((e, i)) => Ok(format!("{}[{}]", expression(*e)?, expression(*i)?)),
     }
 }

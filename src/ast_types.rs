@@ -6,6 +6,7 @@ pub struct Literal {
     pub val: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum Expression {
     Literal(Literal),
@@ -14,13 +15,15 @@ pub enum Expression {
     Variable(Variable),
     Object((String, HashMap<String, Expression>)),
     Prop((Box<Expression>, String)),
-    Cast((Box<Expression>, DataType))
+    Cast((Box<Expression>, DataType)),
+    Index((Box<Expression>, Box<Expression>))
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DataType {
     Name(String),
-    Object(HashMap<String,DataType>)
+    Object(HashMap<String,DataType>),
+    Array(Box<DataType>),
 }
 
 pub enum Component {

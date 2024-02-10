@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::ast_types::DataType;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Literal {
@@ -15,7 +15,8 @@ pub enum Expression {
     Variable(Variable),
     Object((String, HashMap<String, TypedExpression>)),
     Prop((Box<TypedExpression>, String)),
-    Cast((Box<TypedExpression>, DataType))
+    Cast((Box<TypedExpression>, DataType)),
+    Index((Box<TypedExpression>, Box<TypedExpression>)),
 }
 
 #[derive(Debug, Clone)]
@@ -38,7 +39,7 @@ pub enum Statement {
     VarUpdate(VarUpdate),
     Block(Vec<Statement>),
     If(If),
-    While(While)
+    While(While),
 }
 
 #[derive(Debug, Clone)]
@@ -51,7 +52,7 @@ pub struct While {
 pub struct If {
     pub then_cond: TypedExpression,
     pub then_block: Vec<Statement>,
-    pub else_block: Option<Vec<Statement>>
+    pub else_block: Option<Vec<Statement>>,
 }
 
 #[derive(Debug, Clone)]
@@ -79,23 +80,23 @@ pub struct VarDeclar {
 #[derive(Debug, Clone)]
 pub struct VarUpdate {
     pub name: String,
-    pub val: TypedExpression
+    pub val: TypedExpression,
 }
 
 #[derive(Debug, Clone)]
 pub struct Variable {
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct Call {
     pub name: String,
-    pub args: Vec<TypedExpression>
+    pub args: Vec<TypedExpression>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Operation {
     pub kind: String,
-    pub left:  TypedExpression,
+    pub left: TypedExpression,
     pub right: TypedExpression,
 }

@@ -126,8 +126,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                             }
                             for (i, arg) in c.args.into_iter().enumerate() {
                                 let e = expression(ctx, arg)?;
-                                if fn_s.args[i].1 != e.data_type
-                                {
+                                if fn_s.args[i].1 != e.data_type {
                                     return Err(format!(
                                         "unmatched arg: {:?} {:?}",
                                         fn_s.args[i].1, e.data_type
@@ -185,18 +184,18 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                 data_type: {
                     if let (AST::DataType::Name(l), AST::DataType::Name(r)) = (left_d, right_d) {
                         match (&o.kind[..], &l[..], &r[..]) {
-                            ("add", "int", "int")                  =>   AST::DataType::Name("int".to_string()),
-                            ("sub", "int", "int")                  =>   AST::DataType::Name("int".to_string()),
-                            ("mul", "int", "int")                    => AST::DataType::Name("int".to_string()),
-                            ("div_1", "int", "int")                =>   AST::DataType::Name("int".to_string()),
-                            ("div_2", "int", "int")                =>   AST::DataType::Name("int".to_string()),
-                            ("add", "float", "float")              =>   AST::DataType::Name("float".to_string()),
-                            ("sub", "float", "float")              =>   AST::DataType::Name("float".to_string()),
-                            ("mul", "float", "float")              =>   AST::DataType::Name("float".to_string()),
-                            ("div_1", "float", "float")             =>  AST::DataType::Name("float".to_string()),
-                            ("div_2", "float", "float")             =>  AST::DataType::Name("float".to_string()),
-                            ("neq", l, r)  if l == r    =>  AST::DataType::Name("bool".to_string()),
-                            ("eq", l, r)   if l == r   =>   AST::DataType::Name("bool".to_string()),
+                            ("add", "int", "int") => AST::DataType::Name("int".to_string()),
+                            ("sub", "int", "int") => AST::DataType::Name("int".to_string()),
+                            ("mul", "int", "int") => AST::DataType::Name("int".to_string()),
+                            ("div_1", "int", "int") => AST::DataType::Name("int".to_string()),
+                            ("div_2", "int", "int") => AST::DataType::Name("int".to_string()),
+                            ("add", "float", "float") => AST::DataType::Name("float".to_string()),
+                            ("sub", "float", "float") => AST::DataType::Name("float".to_string()),
+                            ("mul", "float", "float") => AST::DataType::Name("float".to_string()),
+                            ("div_1", "float", "float") => AST::DataType::Name("float".to_string()),
+                            ("div_2", "float", "float") => AST::DataType::Name("float".to_string()),
+                            ("neq", l, r) if l == r => AST::DataType::Name("bool".to_string()),
+                            ("eq", l, r) if l == r => AST::DataType::Name("bool".to_string()),
                             _ => unimplemented!("{} {} {}", &o.kind[..], &l[..], &r[..]),
                         }
                     } else {
@@ -209,6 +208,18 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
             val: TIR::Expression::Cast((Box::new(expression(ctx, *e)?), t.clone())),
             data_type: t,
         },
+        AST::Expression::Index((a, i)) => {
+            let e = expression(ctx, *a)?;
+            let t = if let AST::DataType::Array(t) = e.data_type.clone() {
+                *t
+            } else {
+                return Err(format!("expression is not array"));
+            };
+            TIR::TypedExpression {
+                val: TIR::Expression::Index((Box::new(e), Box::new(expression(ctx, *i)?))),
+                data_type: t,
+            }
+        }
     })
 }
 struct Context {
