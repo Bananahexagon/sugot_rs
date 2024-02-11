@@ -8,6 +8,7 @@ pub fn translate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String
     let mut ctx = Context {
         fns: HashMap::new(),
         vars: Vec::new(),
+        type_aliases: HashMap::new(),
     };
     for a in &ast {
         match a {
@@ -21,9 +22,12 @@ pub fn translate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String
                     },
                 );
             }
-
             AST::Component::FnSignature(e) => {
                 ctx.fns.insert(e.name.clone(), e.clone());
+            }
+            AST::Component::TypeDeclar(t) => {
+                ctx.type_aliases
+                    .insert(t.name.clone(), (t.data_type.clone(), t.is_alias));
             }
             _ => (),
         }
@@ -37,6 +41,7 @@ pub fn translate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String
                 args: e.args,
                 return_type: e.return_type,
             }),
+            AST::Component::TypeDeclar(t) => TIR::Component::TypeDeclar(t),
         })
     }
     Ok(r)
@@ -79,17 +84,32 @@ fn block(ctx: &mut Context, node: Vec<AST::Statement>) -> Result<Vec<TIR::Statem
                     None
                 },
             }),
-            AST::Statement::VarUpdate(v) => TIR::Statement::VarUpdate(TIR::VarUpdate {
-                name: v.name,
-                val: expression(ctx, v.val)?,
-            }),
+            AST::Statement::VarUpdate(v) => {
+                let w = expression(ctx, v.val)?;
+                if let Some(t) = ctx.get_var(&v.name) {
+                    if t != &w.data_type.normalize(ctx).0 {
+                        return Err(format!("type unmatched: {}", v.name));
+                    }
+                    TIR::Statement::VarUpdate(TIR::VarUpdate {
+                        name: v.name,
+                        val: w,
+                    })
+                } else {
+                    return Err(format!("variable {} doesn't exist", v.name));
+                }
+            }
             AST::Statement::VarDeclar(v) => {
                 let l = ctx.vars.len() - 1;
-                ctx.vars[l].insert(v.name.clone(), v.data_type.clone());
+                let t = v.data_type.normalize(ctx).0;
+                ctx.vars[l].insert(v.name.clone(), t.clone());
+                let w = expression(ctx, v.val)?;
+                if t != w.data_type.normalize(ctx).0 {
+                    return Err(format!("type unmatched: {}", v.name));
+                }
                 TIR::Statement::VarDeclar(TIR::VarDeclar {
                     name: v.name,
-                    val: expression(ctx, v.val)?,
-                    data_type: v.data_type,
+                    val: w,
+                    data_type: t,
                 })
             }
             AST::Statement::Expression(e) => TIR::Statement::Expression(expression(ctx, e)?),
@@ -112,7 +132,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
             val: TIR::Expression::Variable(TIR::Variable {
                 name: v.name.clone(),
             }),
-            data_type: ctx.get_var(&v.name).unwrap().clone(),
+            data_type: ctx.get_var(&v.name).unwrap().normalize(ctx).0,
         },
         AST::Expression::Call(c) => {
             if let Some(fn_s) = ctx.clone_fn(&c.name) {
@@ -126,7 +146,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                             }
                             for (i, arg) in c.args.into_iter().enumerate() {
                                 let e = expression(ctx, arg)?;
-                                if fn_s.args[i].1 != e.data_type {
+                                if fn_s.args[i].1.normalize(ctx) != e.data_type.normalize(ctx) {
                                     return Err(format!(
                                         "unmatched arg: {:?} {:?}",
                                         fn_s.args[i].1, e.data_type
@@ -149,7 +169,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
             for (k, v) in b {
                 let v = expression(ctx, v)?;
                 m.insert(k.clone(), v.clone());
-                t.insert(k, v.data_type);
+                t.insert(k, v.data_type.normalize(ctx).0);
             }
             TIR::TypedExpression {
                 val: TIR::Expression::Object((n, m)),
@@ -158,14 +178,14 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
         }
         AST::Expression::Prop((e, a)) => {
             let te = expression(ctx, *e)?;
-            let t = if let AST::DataType::Object(s) = te.data_type.clone() {
+            let t = if let (AST::DataType::Object(s), _) = te.data_type.normalize(ctx) {
                 if let Some(t) = s.get(&a) {
                     t.clone()
                 } else {
                     return Err(format!("unknown property: {}", a));
                 }
             } else {
-                return Err(format!("unknown property: {}", a));
+                return Err(format!("primitive type doesn't have properties: {}", a));
             };
             TIR::TypedExpression {
                 val: TIR::Expression::Prop((Box::new(te), a)),
@@ -210,7 +230,7 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
         },
         AST::Expression::Index((a, i)) => {
             let e = expression(ctx, *a)?;
-            let t = if let AST::DataType::Array(t) = e.data_type.clone() {
+            let t = if let AST::DataType::Array(t) = e.data_type.normalize(ctx).0 {
                 *t
             } else {
                 return Err(format!("expression is not array"));
@@ -220,11 +240,31 @@ fn expression(ctx: &mut Context, node: AST::Expression) -> Result<TIR::TypedExpr
                 data_type: t,
             }
         }
+        AST::Expression::Array(v) => {
+            let mut t = None;
+            let mut a = Vec::new();
+            for e in v {
+                let e = expression(ctx, e)?;
+                if let Some(ref t) = t {
+                    if t != &e.data_type.normalize(ctx).0 {
+                        return Err(format!("array elements must have the same type"));
+                    }
+                } else {
+                    t = Some(e.data_type.normalize(ctx).0);
+                }
+                a.push(e);
+            }
+            TIR::TypedExpression {
+                val: TIR::Expression::Array(a),
+                data_type: AST::DataType::Array(Box::new(t.unwrap())),
+            }
+        }
     })
 }
-struct Context {
+pub struct Context {
     fns: HashMap<String, AST::FnSignature>,
     vars: Vec<HashMap<String, AST::DataType>>,
+    type_aliases: HashMap<String, (AST::DataType, bool)>,
 }
 
 impl Context {
@@ -242,6 +282,13 @@ impl Context {
             }
         }
         return None;
+    }
+    pub fn get_type(&self, n: &str) -> Option<&(AST::DataType, bool)> {
+        if let Some(t) = self.type_aliases.get(n) {
+            Some(t)
+        } else {
+            None
+        }
     }
     //fn get_var_mut(&mut self, n: &str) -> Option<&mut DataType> {
     //    for v in self.vars.iter_mut().rev() {

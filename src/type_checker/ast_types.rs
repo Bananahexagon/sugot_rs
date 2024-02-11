@@ -1,4 +1,4 @@
-use crate::ast_types::DataType;
+use crate::ast_types::{DataType, TypeDeclar};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -17,6 +17,7 @@ pub enum Expression {
     Prop((Box<TypedExpression>, String)),
     Cast((Box<TypedExpression>, DataType)),
     Index((Box<TypedExpression>, Box<TypedExpression>)),
+    Array(Vec<TypedExpression>)
 }
 
 #[derive(Debug, Clone)]
@@ -28,8 +29,9 @@ pub struct TypedExpression {
 #[derive(Debug, Clone)]
 pub enum Component {
     FnDeclar(FnDeclar),
-    RawJS(String),
     FnSignature(FnSignature),
+    TypeDeclar(TypeDeclar),
+    RawJS(String),
 }
 
 #[derive(Debug, Clone)]

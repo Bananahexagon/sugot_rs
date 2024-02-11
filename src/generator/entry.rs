@@ -8,6 +8,7 @@ pub fn generate(ast: Vec<Component>) -> Result<String, String> {
             Component::FnDeclar(f) => fn_declar(f)?,
             Component::RawJS(c) => c,
             Component::FnSignature(_) => "".to_string(),
+            Component::TypeDeclar(_) => "".to_string(),
         })
     }
     result.push_str("$sugot_main()");
@@ -122,8 +123,8 @@ fn expression(node: TypedExpression) -> Result<String, String> {
                     ("mul", "float", "float") => Ok(format!("({} * {})", l, r)),
                     ("div_1", "float", "float") => Ok(format!("({} / {})", l, r)),
                     ("div_2", "float", "float") => Ok(format!("({} % {})", l, r)),
-                    ("neq", l, r) if l == r => Ok(format!("({} === {})", l, r)),
-                    ("eq", l, r) if l == r => Ok(format!("({} !== {})", l, r)),
+                    ("neq", lt, rt) if lt == rt => Ok(format!("({} !== {})", l, r)),
+                    ("eq", lt, rt) if lt == rt => Ok(format!("({} === {})", l, r)),
                     _ => {
                         println!("{:?}", (&o.kind[..], &lt, &rt));
                         Err(format!("unknown operator"))
@@ -150,5 +151,12 @@ fn expression(node: TypedExpression) -> Result<String, String> {
             _ => format!("{}", expression(*e)?),
         }),
         Expression::Index((e, i)) => Ok(format!("{}[{}]", expression(*e)?, expression(*i)?)),
+        Expression::Array(v) => Ok(format!("[{}]", {
+            let mut r = String::new();
+            for e in v {
+                r.push_str(&format!("{},", expression(e)?))
+            }
+            r
+        })),
     }
 }

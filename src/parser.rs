@@ -25,12 +25,12 @@ rule bool() -> Literal
     = s: $("true" / "false") {Literal { kind: "bool".to_string(), val: s.to_string() } }
 
 rule object() -> (String, HashMap<String, Expression>)
-    = n: identifier() _ "{" m: obj_member() ** (_ "," _) _ "}" {
+    = "Object" _ "{" m: obj_member() ** (_ "," _) _ "}" {
         let mut h = HashMap::new();
         for (n, v) in m {
             h.insert(n, v);
         }
-        (n, h)
+        ("Object".to_string(), h)
     }
 
 rule literal() -> Literal = integer() / string() / bool()
@@ -55,13 +55,14 @@ rule mul_operation() -> Expression
     / expression_atom()
 
 rule expression_atom() -> Expression
-    = l: literal() { Expression::Literal(l) } 
-    / i: identifier() { Expression::Variable(Variable { name: i }) } 
+    = l: literal() { Expression::Literal(l) }
+    / i: identifier() { Expression::Variable(Variable { name: i }) }
     / "(" e: expression() ")" { e }
+    / l: "[" e: expression() ** (_ "," _) "]" { Expression::Array(e)}
 
 rule call() -> Expression
     = i: identifier() "(" a: expression() ** (_ "," _) ")" { Call { name: i, args: a }.into_expression()}
-    / o: expression_atom() "." i: identifier() "(" a: expression() ** (_ "," _) ")" { 
+    / o: expression_atom() "." i: identifier() "(" a: expression() ** (_ "," _) ")" {
         let mut b = Vec::new();
         b.push(o);
         for a in a {
@@ -72,22 +73,23 @@ rule call() -> Expression
 
 rule expression() -> Expression
     = c: call() { c }
+    / a: expression_atom() "[" _ i: expression() "]" { Expression::Index((Box::new(a), Box::new(i))) }
     / e: expression_atom() " " _ "as " _  t: data_type() { Expression::Cast((Box::new(e), t)) }
     / o: eq_operation() { o }
-    // o: object() { Expression::Object(o) }
-    // o: expression_atom() "." p: identifier() { Expression::Prop((Box::new(o), p)) }
-    / a: expression_atom() _ "[" _ i: expression() _ "]" { Expression::Index((Box::new(a), Box::new(i))) }
+    / o: object() { Expression::Object(o) }
+    / o: expression_atom() "." p: identifier() { Expression::Prop((Box::new(o), p)) }
     / a: expression_atom() { a }
 
 rule data_type() -> DataType
     = n: identifier() { DataType::Name(n) }
-    / n: identifier() _ "{" m: type_member() ** (_ "," _) _ "}" {
+    /  "Object" _ "{" m: type_member() ** (_ "," _) _ "}" {
         let mut h = HashMap::new();
         for (n, v) in m {
             h.insert(n, v);
         }
         DataType::Object(h)
     }
+    / "[" _ t: data_type() _ "]" {DataType::Array(Box::new(t))}
 
 rule var_declar() -> Statement
     = "let" _ n: identifier() _ ":" _ t: data_type() _ "=" _ e: expression() ";" { Statement::VarDeclar(VarDeclar{ name: n, data_type: t, val: e }) }
@@ -130,10 +132,21 @@ rule obj_member() -> (String, Expression)
 rule type_member() -> (String, DataType)
     = n: identifier() _ ":" _ t: data_type() {( n, t )}
 
+rule type_declar() -> TypeDeclar
+    = "alias " _ n: identifier() " " t: data_type() {
+        TypeDeclar {
+            name: n,
+            data_type: t,
+            is_alias: false,
+        }
+    }
+
+
 rule component() -> Component
     = f: fn_declar() { Component::FnDeclar(f) }
     / c: "#raw_js(" s: $((!")#" [_])*) ")#" { Component::RawJS(s.to_string()) }
     / e: fn_extern() { Component::FnSignature(e) }
+    / t: type_declar() {Component::TypeDeclar(t)}
 
 pub rule program() -> Vec<Component>
     = _ c: component() ** _ _  { c }
