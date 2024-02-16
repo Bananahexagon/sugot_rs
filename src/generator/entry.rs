@@ -11,18 +11,18 @@ pub fn generate(ast: Vec<Component>) -> Result<String, String> {
             Component::TypeDeclar(_) => "".to_string(),
         })
     }
-    result.push_str("$sugot_main()");
+    result.push_str("sugot_main()");
     Ok(result)
 }
 
 fn fn_declar(node: FnDeclar) -> Result<String, String> {
     Ok(format!(
-        "function $sugot_{} ({}) {{{}}}",
+        "function sugot_{} ({}) {{{}}}",
         node.name,
         {
             let mut s = String::new();
             for a in node.args {
-                s.push_str(&format!("$sugot_{},", a.0))
+                s.push_str(&format!("sugot_{},", a.0))
             }
             s
         },
@@ -76,8 +76,8 @@ fn statement(node: Statement) -> Result<String, String> {
                 }))
             }
         }
-        Statement::VarDeclar(v) => Ok(format!("let $sugot_{} = {};", v.name, expression(v.val)?)),
-        Statement::VarUpdate(v) => Ok(format!("$sugot_{} = {};", v.name, expression(v.val)?)),
+        Statement::VarDeclar(v) => Ok(format!("let sugot_{} = {};", v.name, expression(v.val)?)),
+        Statement::VarUpdate(v) => Ok(format!("sugot_{} = {};", v.name, expression(v.val)?)),
         Statement::While(q) => Ok(format!("while ({}) {{{}}};", expression(q.cond)?, {
             let mut r = String::new();
             for a in q.block {
@@ -95,7 +95,7 @@ fn expression(node: TypedExpression) -> Result<String, String> {
             for arg in c.args {
                 args.push_str(&format!("{}, ", expression(arg)?))
             }
-            Ok(format!("$sugot_{}({})", c.name, args))
+            Ok(format!("sugot_{}({})", c.name, args))
         }
         Expression::Literal(l) => match &l.kind[..] {
             "string" => Ok(format!("{}", l.val)),
@@ -134,7 +134,7 @@ fn expression(node: TypedExpression) -> Result<String, String> {
                 unimplemented!()
             }
         }
-        Expression::Variable(v) => Ok(format!("$sugot_{}", v.name)),
+        Expression::Variable(v) => Ok(format!("sugot_{}", v.name)),
         Expression::Object((_, o)) => Ok(format!("{{{}}}", {
             let mut s = String::new();
             for (n, e) in o {

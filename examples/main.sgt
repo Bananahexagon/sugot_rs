@@ -1,5 +1,5 @@
 #raw_js(
-    const $sugot_println = console.log;
+    const sugot_println = console.log;
 )#
 
 extern fn println(s: string): void
