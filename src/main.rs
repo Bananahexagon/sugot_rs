@@ -2,13 +2,14 @@ use std::fs;
 use std::io::Write;
 
 mod ast_types;
-mod generator;
+mod generator_cpp;
+mod generator_js;
 mod json;
 mod parser;
 mod type_checker;
 
 fn main() {
-    let option = fs::read_to_string("./examples/project.json").unwrap_or_else(|op| {
+    let option = fs::read_to_string("./sample/project.json").unwrap_or_else(|op| {
         eprintln!("Error: {:?}", op);
         String::new()
     });
@@ -24,8 +25,12 @@ fn main() {
     //    eprintln!("{}", s);
     //    return;
     //}
-    let result = generator::entry::generate(typed);
     let o_dir = config.obj().unwrap().get("outdir").unwrap().str().unwrap();
+    let result = match o_dir.split('.').last().unwrap() {
+        "js" => generator_js::entry::generate(typed),
+        "cpp" => generator_cpp::entry::generate(typed),
+        _ => unimplemented!(),
+    };
     if let Ok(c) = result {
         let mut file = fs::OpenOptions::new()
             .write(true)

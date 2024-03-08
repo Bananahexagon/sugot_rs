@@ -1,4 +1,0 @@
-{
-    "entry": "./examples/main.sgt",
-    "outdir": "./examples/dist.js"
-}
