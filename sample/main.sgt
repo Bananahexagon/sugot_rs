@@ -1,5 +1,13 @@
 #raw_js(
-    const sugot_println = console.log;
+    const sugot_println = s => console.log(s);
+)#
+
+#raw_cpp(
+    #include <iostream>
+    #include <string>
+    void sugot_println(std::string s) {
+        std::cout << s << std::endl;
+    }
 )#
 
 extern fn println(s: string): void

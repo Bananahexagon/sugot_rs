@@ -6,6 +6,7 @@ pub fn generate(ast: Vec<Component>) -> Result<String, String> {
     for a in ast {
         result.push_str(&match a {
             Component::FnDeclar(f) => fn_declar(f)?,
+            Component::RawCPP(_) => "".to_string(),
             Component::RawJS(c) => c,
             Component::FnSignature(_) => "".to_string(),
             Component::TypeDeclar(_) => "".to_string(),
@@ -17,8 +18,9 @@ pub fn generate(ast: Vec<Component>) -> Result<String, String> {
 
 fn fn_declar(node: FnDeclar) -> Result<String, String> {
     Ok(format!(
-        "function sugot_{} ({}) {{{}}}",
-        node.name,
+        "{} {} ({}) {{{}}}",
+        type_name(&node.return_type),
+        if node.name == "main" {"main".to_string()} else {format!("sugot_{}",node.name)},
         {
             let mut s = String::new();
             for a in node.args {
@@ -113,18 +115,16 @@ fn expression(node: TypedExpression) -> Result<String, String> {
                     ("add", "int", "int") => Ok(format!("({} + {})", l, r)),
                     ("sub", "int", "int") => Ok(format!("({} - {})", l, r)),
                     ("mul", "int", "int") => Ok(format!("({} * {})", l, r)),
-                    ("div_1", "int", "int") => Ok(format!("Math.floor({} / {})", l, r)),
-                    ("div_2", "int", "int") => Ok(format!(
-                        "((l, r) => {{ let t = l % r; if (t < 0) t += r; return r; }})({}, {})",
-                        l, r
+                    ("div_1", "int", "int") => Ok(format!("{} / {}", l, r)),
+                    ("div_2", "int", "int") => Ok(format!("{} % {}",l,r
                     )),
                     ("add", "float", "float") => Ok(format!("({} + {})", l, r)),
                     ("sub", "float", "float") => Ok(format!("({} - {})", l, r)),
                     ("mul", "float", "float") => Ok(format!("({} * {})", l, r)),
                     ("div_1", "float", "float") => Ok(format!("({} / {})", l, r)),
                     ("div_2", "float", "float") => Ok(format!("({} % {})", l, r)),
-                    ("neq", lt, rt) if lt == rt => Ok(format!("({} !== {})", l, r)),
-                    ("eq", lt, rt) if lt == rt => Ok(format!("({} === {})", l, r)),
+                    ("neq", lt, rt) if lt == rt => Ok(format!("({} != {})", l, r)),
+                    ("eq", lt, rt) if lt == rt => Ok(format!("({} == {})", l, r)),
                     _ => {
                         println!("{:?}", (&o.kind[..], &lt, &rt));
                         Err(format!("unknown operator"))
@@ -135,28 +135,29 @@ fn expression(node: TypedExpression) -> Result<String, String> {
             }
         }
         Expression::Variable(v) => Ok(format!("sugot_{}", v.name)),
-        Expression::Object((_, o)) => Ok(format!("{{{}}}", {
-            let mut s = String::new();
-            for (n, e) in o {
-                s.push_str(&format!("{}: {},", n, expression(e)?))
-            }
-            s
-        })),
+        Expression::Object((_, _)) => unimplemented!(),
         Expression::Prop((e, p)) => Ok(format!("{}.{}", expression(*e)?, p)),
         Expression::Cast((e, t)) => Ok(match t {
             DataType::Name(s) => match &s[..] {
-                "string" => format!("`${{{}}}`", expression(*e)?),
                 _ => format!("{}", expression(*e)?),
             },
             _ => format!("{}", expression(*e)?),
         }),
         Expression::Index((e, i)) => Ok(format!("{}[{}]", expression(*e)?, expression(*i)?)),
-        Expression::Array(v) => Ok(format!("[{}]", {
+        Expression::Array(v) => Ok(format!("{{{}}}", {
             let mut r = String::new();
             for e in v {
                 r.push_str(&format!("{},", expression(e)?))
             }
             r
         })),
+    }
+}
+
+fn type_name (t:& DataType) -> String {
+    match t {
+        DataType::Name(n) => n.to_string(),
+        DataType::Array(u) => format!("*{}",type_name(u)),
+        _ => unimplemented!()
     }
 }

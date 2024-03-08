@@ -36,6 +36,7 @@ pub fn translate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String
         r.push(match a {
             AST::Component::FnDeclar(f) => TIR::Component::FnDeclar(fn_declar(&mut ctx, f)?),
             AST::Component::RawJS(c) => TIR::Component::RawJS(c),
+            AST::Component::RawCPP(c) => TIR::Component::RawCPP(c),
             AST::Component::FnSignature(e) => TIR::Component::FnSignature(TIR::FnSignature {
                 name: e.name,
                 args: e.args,

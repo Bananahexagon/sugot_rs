@@ -1,4 +1,4 @@
 {
     "entry": "./sample/main.sgt",
-    "outdir": "./sample/dist.cpp"
+    "outdir": "./sample/dist.js"
 }

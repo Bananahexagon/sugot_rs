@@ -35,6 +35,7 @@ pub enum Component {
     FnSignature(FnSignature),
     TypeDeclar(TypeDeclar),
     RawJS(String),
+    RawCPP(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
