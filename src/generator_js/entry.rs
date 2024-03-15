@@ -10,6 +10,7 @@ pub fn generate(ast: Vec<Component>) -> Result<String, String> {
             Component::RawJS(c) => c,
             Component::FnSignature(_) => "".to_string(),
             Component::TypeDeclar(_) => "".to_string(),
+            Component::ModDeclar(_) => unimplemented!()
         })
     }
     result.push_str("sugot_main()");

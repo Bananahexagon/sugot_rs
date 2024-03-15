@@ -141,13 +141,16 @@ rule type_declar() -> TypeDeclar
         }
     }
 
+rule mod_declar() -> ModDeclar
+    = "mod " _ n: identifier() "{" _ c: component() ** _ _ "}"  {ModDeclar { name: n, contents: c }}
 
 rule component() -> Component
     = f: fn_declar() { Component::FnDeclar(f) }
     / c: "#raw_js(" s: $((!")#" [_])*) ")#" { Component::RawJS(s.to_string()) }
     / c: "#raw_cpp(" s: $((!")#" [_])*) ")#" { Component::RawCPP(s.to_string()) }
     / e: fn_extern() { Component::FnSignature(e) }
-    / t: type_declar() {Component::TypeDeclar(t)}
+    / t: type_declar() { Component::TypeDeclar(t) }
+    / m: mod_declar() { Component::ModDeclar(m) }
 
 pub rule program() -> Vec<Component>
     = _ c: component() ** _ _  { c }

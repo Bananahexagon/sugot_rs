@@ -43,6 +43,7 @@ pub fn translate(ast: Vec<AST::Component>) -> Result<Vec<TIR::Component>, String
                 return_type: e.return_type,
             }),
             AST::Component::TypeDeclar(t) => TIR::Component::TypeDeclar(t),
+            AST::Component::ModDeclar(m) => unimplemented!()
         })
     }
     Ok(r)

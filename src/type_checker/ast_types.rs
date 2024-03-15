@@ -33,6 +33,7 @@ pub enum Component {
     TypeDeclar(TypeDeclar),
     RawJS(String),
     RawCPP(String),
+    ModDeclar(ModDeclar),
 }
 
 #[derive(Debug, Clone)]
@@ -102,4 +103,10 @@ pub struct Operation {
     pub kind: String,
     pub left: TypedExpression,
     pub right: TypedExpression,
+}
+
+#[derive(Debug, Clone)]
+pub struct ModDeclar {
+    pub name: String,
+    pub contents: Vec<Component>,
 }
